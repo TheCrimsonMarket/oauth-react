@@ -1,4 +1,10 @@
-import type { TcmAuthCodePayload, TcmOAuthError, TcmProvider } from '../types';
+import type {
+  TcmAuthCodePayload,
+  TcmOAuthError,
+  TcmOAuthInteractionMode,
+  TcmProvider,
+  TcmResolvedOAuthInteractionMode,
+} from '../types';
 
 export type TcmOAuthClientPhase =
   | 'idle'
@@ -50,4 +56,18 @@ export interface CreateTcmOAuthPopupRouteClientOptions<TExchangeResult = unknown
 export interface TcmOAuthPopupRouteClient<TExchangeResult = unknown> extends TcmOAuthClient {
   exchangeCodeViaRoute: (payload: TcmAuthCodePayload) => Promise<TExchangeResult>;
   loginWithPopupRoute: (params: TcmOAuthPopupLoginParams) => Promise<TExchangeResult>;
+}
+
+export interface CreateTcmOAuthRouteClientOptions<TExchangeResult = unknown>
+  extends CreateTcmOAuthPopupRouteClientOptions<TExchangeResult> {
+  interactionMode?: TcmOAuthInteractionMode;
+  fallbackToRedirect?: boolean;
+  returnTo?: string;
+}
+
+export interface TcmOAuthRouteClient<TExchangeResult = unknown> extends TcmOAuthPopupRouteClient<TExchangeResult> {
+  hasPendingRedirectResult: () => boolean;
+  loginWithRoute: (params: TcmOAuthPopupLoginParams) => Promise<TExchangeResult>;
+  resumeRedirectRouteIfPresent: () => Promise<TExchangeResult | null>;
+  resolveInteractionMode: () => TcmResolvedOAuthInteractionMode;
 }

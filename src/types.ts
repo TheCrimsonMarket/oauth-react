@@ -14,6 +14,9 @@ export type TcmOAuthPhase =
   | 'done'
   | 'error';
 
+export type TcmOAuthInteractionMode = 'auto' | 'popup' | 'redirect';
+export type TcmResolvedOAuthInteractionMode = 'popup' | 'redirect';
+
 export type TcmOAuthErrorCode =
   | 'popup_blocked'
   | 'popup_closed'
@@ -81,6 +84,31 @@ export interface UseTcmOAuthPopupRouteReturn<TExchangeResult = unknown> {
   authenticating: boolean;
   phase: TcmOAuthPhase;
   error: TcmOAuthError | null;
+  startLogin: (provider: TcmProvider) => Promise<void>;
+  clearError: () => void;
+}
+
+export interface UseTcmOAuthOptions<TExchangeResult = unknown> {
+  clientId: string;
+  tcmWebUrl: string;
+  exchangeEndpoint?: string;
+  callbackPath?: string;
+  scope?: string;
+  popup?: { width?: number; height?: number };
+  diagnostics?: TcmOAuthDiagnosticsMode;
+  fetch?: typeof fetch;
+  interactionMode?: TcmOAuthInteractionMode;
+  fallbackToRedirect?: boolean;
+  returnTo?: string;
+  onSuccess?: (result: TExchangeResult) => void | Promise<void>;
+  onError?: (error: TcmOAuthError) => void;
+}
+
+export interface UseTcmOAuthReturn<TExchangeResult = unknown> {
+  authenticating: boolean;
+  phase: TcmOAuthPhase;
+  error: TcmOAuthError | null;
+  resolvedInteractionMode: TcmResolvedOAuthInteractionMode | null;
   startLogin: (provider: TcmProvider) => Promise<void>;
   clearError: () => void;
 }

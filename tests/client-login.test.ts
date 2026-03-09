@@ -151,6 +151,7 @@ describe('createTcmOAuthClient', () => {
     openPopup.mockReturnValue({
       closed: false,
       focus: vi.fn(),
+      location: { href: '' },
     });
     claimFlowTransaction.mockReturnValue(true);
     consumeTransaction.mockReturnValue({
@@ -212,6 +213,7 @@ describe('createTcmOAuthClient', () => {
     openPopup.mockReturnValue({
       closed: false,
       focus: vi.fn(),
+      location: { href: '' },
     });
     claimFlowTransaction.mockReturnValue(true);
     consumeTransaction.mockReturnValue({

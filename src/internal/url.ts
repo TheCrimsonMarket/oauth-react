@@ -1,4 +1,4 @@
-import type { TcmProvider } from '../types';
+import type { TcmProvider, TcmResolvedOAuthInteractionMode } from '../types';
 
 interface BuildAuthorizeUrlOptions {
   tcmWebUrl: string;
@@ -8,6 +8,7 @@ interface BuildAuthorizeUrlOptions {
   state: string;
   codeChallenge: string;
   provider: TcmProvider;
+  interactionMode?: TcmResolvedOAuthInteractionMode;
 }
 
 export function buildAuthorizeUrl(options: BuildAuthorizeUrlOptions): string {
@@ -20,12 +21,16 @@ export function buildAuthorizeUrl(options: BuildAuthorizeUrlOptions): string {
   url.searchParams.set('code_challenge', options.codeChallenge);
   url.searchParams.set('code_challenge_method', 'S256');
   url.searchParams.set('provider', options.provider);
-  url.searchParams.set('ui_mode', 'popup');
+  if ((options.interactionMode ?? 'popup') === 'popup') {
+    url.searchParams.set('ui_mode', 'popup');
+  }
 
   if (options.provider === 'google') {
     url.searchParams.set('required_provider', 'google');
     url.searchParams.set('auto_start_provider', 'google');
-    url.searchParams.set('popup_variant', 'spinner');
+    if ((options.interactionMode ?? 'popup') === 'popup') {
+      url.searchParams.set('popup_variant', 'spinner');
+    }
   }
 
   return url.toString();

@@ -1,6 +1,6 @@
 # @crimsoncorp/oauth-react
 
-Popup-first OAuth SDK for TCM integrations with strict PKCE/state handling and a recommended route-backed abstraction for server-backed React apps.
+Production-ready OAuth SDK for TCM integrations with strict PKCE/state handling and a recommended route-backed abstraction for server-backed React apps.
 
 ## Install
 
@@ -11,14 +11,20 @@ npm install @crimsoncorp/oauth-react
 ## Recommended Integration Path
 
 Use the route-backed APIs for server-backed apps:
-1. Browser: `useTcmOAuthPopupRoute` or `createTcmOAuthPopupRouteClient`
-2. Callback page: `TcmPopupCallbackPage`
+1. Browser: `useTcmOAuth` or `createTcmOAuthRouteClient`
+2. Callback page: `TcmOAuthCallbackPage`
 3. Server route: `createTcmOAuthExchangeRoute`
 
 Keep the low-level APIs when you need full custom control:
 1. React hook: `useTcmOAuthPopup`
-2. Browser client: `createTcmOAuthClient`
+2. Browser client: `createTcmOAuthPopupClient`
 3. Server helpers: `@crimsoncorp/oauth-react/server`
+
+The recommended APIs support:
+1. `interactionMode: "auto" | "popup" | "redirect"`
+2. `auto` defaulting to popup on desktop-like environments
+3. `auto` defaulting to redirect on mobile-like environments
+4. popup-to-redirect fallback when popup opening is blocked
 
 SDK styles are opt-in:
 
@@ -29,14 +35,15 @@ import "@crimsoncorp/oauth-react/styles.css";
 ## Route-Backed React Quickstart
 
 ```tsx
-import { useTcmOAuthPopupRoute } from "@crimsoncorp/oauth-react";
+import { useTcmOAuth } from "@crimsoncorp/oauth-react";
 
 export function LoginButton() {
-  const oauth = useTcmOAuthPopupRoute<{ userId: string }>({
+  const oauth = useTcmOAuth<{ userId: string }>({
     clientId: process.env.NEXT_PUBLIC_TCM_OAUTH_CLIENT_ID!,
     tcmWebUrl: process.env.NEXT_PUBLIC_TCM_OAUTH_WEB_URL!,
-    callbackPath: "/auth/tcm/popup-callback",
+    callbackPath: "/auth/tcm/callback",
     exchangeEndpoint: "/api/auth/tcm/oauth-exchange",
+    interactionMode: "auto",
     onSuccess: ({ userId }) => {
       console.log("Logged in as", userId);
     },
@@ -53,10 +60,10 @@ export function LoginButton() {
 Render the callback page on your app origin:
 
 ```tsx
-import { TcmPopupCallbackPage } from "@crimsoncorp/oauth-react";
+import { TcmOAuthCallbackPage } from "@crimsoncorp/oauth-react";
 
 export default function Page() {
-  return <TcmPopupCallbackPage />;
+  return <TcmOAuthCallbackPage />;
 }
 ```
 
@@ -70,7 +77,7 @@ const route = createTcmOAuthExchangeRoute({
     apiBaseUrl: process.env.TCM_OAUTH_API_URL!,
     clientId: process.env.TCM_OAUTH_CLIENT_ID!,
     clientSecret: process.env.TCM_OAUTH_CLIENT_SECRET!,
-    callbackPath: "/auth/tcm/popup-callback",
+    callbackPath: "/auth/tcm/callback",
     expectedProvider: "google",
   },
   async onResolvedUser({ userInfo }) {
@@ -100,16 +107,18 @@ export const { POST } = route;
 ## Behavior Guarantees
 
 1. PKCE S256, state checks, and transaction expiry are enforced in the browser flow.
-2. One active popup flow is allowed per browser window.
-3. Duplicate popup starts reuse/focus the active flow.
-4. Duplicate callback state is consumed once.
-5. Route-backed exchange normalizes non-2xx responses into `exchange_failed`.
+2. `auto` interaction mode selects redirect on mobile-like environments and popup on desktop-like environments.
+3. One active popup flow is allowed per browser window.
+4. Duplicate popup starts reuse/focus the active flow.
+5. Duplicate callback state is consumed once.
+6. Route-backed exchange normalizes non-2xx responses into `exchange_failed`.
 
 ## Important Constraints
 
 1. This SDK currently targets server-backed apps.
 2. `Portal.Service` still requires `client_secret` at token exchange, so pure browser-only SPA exchange is not officially supported.
 3. Redirect URIs must match the registered value exactly.
+4. Popup-specific exports remain available for backward compatibility but are no longer the recommended integration surface.
 
 ## Docs
 

@@ -11,7 +11,7 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
 - `@crimsoncorp/oauth-react/client`
   - Framework-agnostic browser clients
 - `@crimsoncorp/oauth-react/client/callback`
-  - Popup callback poster
+  - Callback helpers for popup and redirect flows
 - `@crimsoncorp/oauth-react/server`
   - Framework-neutral server helpers and types
 - `@crimsoncorp/oauth-react/nextjs`
@@ -20,12 +20,15 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
 ### Recommended Abstraction Levels
 
 - Preferred for server-backed React apps:
-  - `useTcmOAuthPopupRoute`
-  - `TcmPopupCallbackPage`
+  - `useTcmOAuth`
+  - `TcmOAuthCallbackPage`
+  - `createTcmOAuthRouteClient`
   - `createTcmOAuthExchangeRoute`
 - Use lower-level APIs only when you need custom exchange handling:
   - `useTcmOAuthPopup`
-  - `createTcmOAuthClient`
+  - `useTcmOAuthPopupRoute`
+  - `createTcmOAuthPopupClient`
+  - `createTcmOAuthClient` (legacy alias)
   - `exchangeTcmAuthorizationCode` / `exchangeTcmPopupCode`
 
 ### Current Constraints
@@ -33,11 +36,31 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
 - The SDK’s primary supported path is a server-backed app.
 - `Portal.Service` currently requires `client_secret` for token exchange.
 - Redirect URI matching is exact on the server side.
-- Default popup callback path is `/auth/tcm/popup-callback`.
+- Default recommended callback path is `/auth/tcm/callback`.
+- Popup-only compatibility APIs still default to `/auth/tcm/popup-callback`.
 - Default browser scope is `profile email`.
 - Route-backed browser exchange defaults to `/api/auth/tcm/oauth-exchange`.
+- Recommended interaction mode is `auto`.
 
 ## Root Exports
+
+### `useTcmOAuth`
+
+- Import:
+  - `import { useTcmOAuth } from "@crimsoncorp/oauth-react"`
+- Purpose:
+  - Recommended route-backed React hook with automatic popup vs redirect selection.
+- Key options:
+  - all route-backed popup options, plus:
+  - `interactionMode?: "auto" | "popup" | "redirect"`
+    - default: `auto`
+  - `fallbackToRedirect?: boolean`
+    - default: `true`
+  - `returnTo?: string`
+- Return:
+  - same shape as route-backed popup hook, plus `resolvedInteractionMode`
+- Use when:
+  - you want the SDK to choose the production-safe interaction mode and minimize app-side control
 
 ### `useTcmOAuthPopup`
 
@@ -80,7 +103,7 @@ function useTcmOAuthPopup<TExchangeResult = unknown>(
 - Import:
   - `import { useTcmOAuthPopupRoute } from "@crimsoncorp/oauth-react"`
 - Purpose:
-  - React hook for the recommended route-backed flow. The hook owns the POST to your exchange endpoint after popup success.
+  - React hook for the popup-only route-backed flow. The hook owns the POST to your exchange endpoint after popup success.
 - Signature:
 
 ```ts
@@ -110,7 +133,7 @@ function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
 - Diagnostics behavior:
   - in `auto`, sends `x-tcm-flow-id` and `x-tcm-message-id` in development and staging-like environments
 - Use when:
-  - you want the browser side to be opinionated and simple, with the server route handling the real exchange
+  - you specifically want popup-only route-backed behavior and do not want automatic mobile redirect handling
 
 ### `TcmOAuthButton`
 
@@ -146,12 +169,23 @@ function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
 - Import:
   - `import { TcmPopupCallbackPage } from "@crimsoncorp/oauth-react"`
 - Purpose:
-  - Drop-in callback page component for the popup redirect URI route.
+  - Backward-compatible callback page component alias for popup integrations.
 - Behavior:
   - calls `postPopupCallbackResult()` on mount
   - renders a minimal “authentication complete” message
 - Use when:
-  - your callback route is a React page and you want the standard popup completion behavior
+  - you are preserving an existing popup callback route such as `/auth/tcm/popup-callback`
+
+### `TcmOAuthCallbackPage`
+
+- Import:
+  - `import { TcmOAuthCallbackPage } from "@crimsoncorp/oauth-react"`
+- Purpose:
+  - Recommended callback page component for both popup and redirect flows.
+- Behavior:
+  - posts back to the opener when the flow is running in a popup
+  - stores redirect results and returns to the initiating route when the flow is running top-level
+
 
 ## Root Shared Types
 
@@ -174,6 +208,18 @@ function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
 
 - Meaning:
   - high-level state machine exposed by React hooks
+
+### `TcmOAuthInteractionMode`
+
+```ts
+"auto" | "popup" | "redirect"
+```
+
+### `TcmResolvedOAuthInteractionMode`
+
+```ts
+"popup" | "redirect"
+```
 
 ### `TcmOAuthErrorCode`
 
@@ -264,6 +310,33 @@ function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
   - `startLogin(provider)`
   - `clearError()`
 
+### `UseTcmOAuthOptions<TExchangeResult>`
+
+- Fields:
+  - `clientId`
+  - `tcmWebUrl`
+  - `exchangeEndpoint?`
+  - `callbackPath?`
+  - `scope?`
+  - `popup?`
+  - `diagnostics?`
+  - `fetch?`
+  - `interactionMode?`
+  - `fallbackToRedirect?`
+  - `returnTo?`
+  - `onSuccess?`
+  - `onError?`
+
+### `UseTcmOAuthReturn<TExchangeResult>`
+
+- Fields:
+  - `authenticating`
+  - `phase`
+  - `error`
+  - `resolvedInteractionMode`
+  - `startLogin(provider)`
+  - `clearError()`
+
 ### `PopupResult`
 
 - Success variant:
@@ -290,12 +363,40 @@ function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
 
 ## Client Exports
 
+### `createTcmOAuthRouteClient`
+
+- Import:
+  - `import { createTcmOAuthRouteClient } from "@crimsoncorp/oauth-react/client"`
+- Purpose:
+  - recommended framework-neutral browser client with automatic popup vs redirect selection
+- Signature:
+
+```ts
+function createTcmOAuthRouteClient<TExchangeResult = unknown>(
+  options: CreateTcmOAuthRouteClientOptions<TExchangeResult>,
+): TcmOAuthRouteClient<TExchangeResult>;
+```
+
+- Behavior:
+  - resolves `interactionMode`
+  - uses popup on desktop-like environments in `auto`
+  - uses redirect on mobile-like environments in `auto`
+  - falls back from `popup_blocked` to redirect by default
+  - resumes redirect callback results and exchanges them through the configured route
+
+### `createTcmOAuthPopupClient`
+
+- Import:
+  - `import { createTcmOAuthPopupClient } from "@crimsoncorp/oauth-react/client"`
+- Purpose:
+  - correctly named popup-only browser client export
+
 ### `createTcmOAuthClient`
 
 - Import:
   - `import { createTcmOAuthClient } from "@crimsoncorp/oauth-react/client"`
 - Purpose:
-  - framework-neutral browser popup client
+  - legacy alias for the popup-only browser client
 - Signature:
 
 ```ts
@@ -324,7 +425,7 @@ function createTcmOAuthPopupRouteClient<TExchangeResult = unknown>(
 ```
 
 - Behavior:
-  - wraps `createTcmOAuthClient`
+  - wraps the popup-only client path
   - adds `exchangeCodeViaRoute(payload)`
   - adds `loginWithPopupRoute({ provider })`
 
@@ -349,6 +450,17 @@ function createTcmOAuthPopupRouteClient<TExchangeResult = unknown>(
   - `diagnostics?: TcmOAuthDiagnosticsMode`
     - default: `auto`
   - `fetch?: typeof fetch`
+
+### `CreateTcmOAuthRouteClientOptions<TExchangeResult>`
+
+- Extends:
+  - `CreateTcmOAuthPopupRouteClientOptions<TExchangeResult>`
+- Adds:
+  - `interactionMode?: "auto" | "popup" | "redirect"`
+    - default: `auto`
+  - `fallbackToRedirect?: boolean`
+    - default: `true`
+  - `returnTo?: string`
 
 ### `TcmOAuthClientPhase`
 
@@ -390,7 +502,27 @@ function createTcmOAuthPopupRouteClient<TExchangeResult = unknown>(
   - `exchangeCodeViaRoute(payload): Promise<TExchangeResult>`
   - `loginWithPopupRoute(params): Promise<TExchangeResult>`
 
+### `TcmOAuthRouteClient<TExchangeResult>`
+
+- Extends:
+  - `TcmOAuthPopupRouteClient<TExchangeResult>`
+- Adds:
+  - `hasPendingRedirectResult(): boolean`
+  - `loginWithRoute(params): Promise<TExchangeResult>`
+  - `resumeRedirectRouteIfPresent(): Promise<TExchangeResult | null>`
+  - `resolveInteractionMode(): "popup" | "redirect"`
+
 ## Callback Export
+
+### `handleOAuthCallback`
+
+- Import:
+  - `import { handleOAuthCallback } from "@crimsoncorp/oauth-react/client/callback"`
+- Purpose:
+  - generalized callback helper used by the SDK callback page
+- Behavior:
+  - posts to `window.opener` for popup flows
+  - stores redirect callback results and returns to the initiating route for redirect flows
 
 ### `postPopupCallbackResult`
 
@@ -686,6 +818,8 @@ function createTcmOAuthExchangeRoute<TSession = unknown, TBody = unknown>(
 ## Defaults and Behavioral Guarantees
 
 - Default callback path:
+  - recommended neutral path: `/auth/tcm/callback`
+- Popup-only compatibility callback path:
   - `/auth/tcm/popup-callback`
 - Default browser scope:
   - `profile email`
@@ -697,6 +831,8 @@ function createTcmOAuthExchangeRoute<TSession = unknown, TBody = unknown>(
 - Default diagnostics mode:
   - `auto`
 - Flow guarantees:
+  - `auto` resolves redirect on mobile-like environments and popup on desktop-like environments
+  - popup opening happens before async PKCE work in the popup-only client path
   - one active popup flow per browser window
   - duplicate popup starts reuse/focus the active flow
   - callback state is consumed once
@@ -706,4 +842,3 @@ function createTcmOAuthExchangeRoute<TSession = unknown, TBody = unknown>(
 
 - `docs/server-backed-nextjs.md`
 - `docs/react-client-usage.md`
-

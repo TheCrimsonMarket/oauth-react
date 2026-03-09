@@ -16,20 +16,20 @@ NEXT_PUBLIC_TCM_OAUTH_WEB_URL=https://www.thecrimsonmarket.com
 TCM_OAUTH_API_URL=https://api.thecrimsonmarket.com
 TCM_OAUTH_CLIENT_ID=tcm_xxx
 TCM_OAUTH_CLIENT_SECRET=your-secret
-TCM_OAUTH_REDIRECT_URI=https://your-app.example.com/auth/tcm/popup-callback
+TCM_OAUTH_REDIRECT_URI=https://your-app.example.com/auth/tcm/callback
 ```
 
 ## 1. Callback Page
 
 ```tsx
-import { TcmPopupCallbackPage } from "@crimsoncorp/oauth-react";
+import { TcmOAuthCallbackPage } from "@crimsoncorp/oauth-react";
 
 export default function Page() {
-  return <TcmPopupCallbackPage />;
+  return <TcmOAuthCallbackPage />;
 }
 ```
 
-Mount this at `/auth/tcm/popup-callback`.
+Mount this at `/auth/tcm/callback`.
 
 ## 2. Exchange Route
 
@@ -41,7 +41,7 @@ const route = createTcmOAuthExchangeRoute({
     apiBaseUrl: process.env.TCM_OAUTH_API_URL!,
     clientId: process.env.TCM_OAUTH_CLIENT_ID!,
     clientSecret: process.env.TCM_OAUTH_CLIENT_SECRET!,
-    callbackPath: "/auth/tcm/popup-callback",
+    callbackPath: "/auth/tcm/callback",
     redirectUri: process.env.TCM_OAUTH_REDIRECT_URI,
     expectedProvider: "google",
   },
@@ -87,14 +87,15 @@ Your app still owns:
 ## 3. Browser Hook
 
 ```tsx
-import { useTcmOAuthPopupRoute } from "@crimsoncorp/oauth-react";
+import { useTcmOAuth } from "@crimsoncorp/oauth-react";
 
 export function LoginButton() {
-  const oauth = useTcmOAuthPopupRoute<{ userId: string }>({
+  const oauth = useTcmOAuth<{ userId: string }>({
     clientId: process.env.NEXT_PUBLIC_TCM_OAUTH_CLIENT_ID!,
     tcmWebUrl: process.env.NEXT_PUBLIC_TCM_OAUTH_WEB_URL!,
     exchangeEndpoint: "/api/auth/tcm/oauth-exchange",
-    callbackPath: "/auth/tcm/popup-callback",
+    callbackPath: "/auth/tcm/callback",
+    interactionMode: "auto",
   });
 
   return (
@@ -105,8 +106,19 @@ export function LoginButton() {
 }
 ```
 
+## Interaction Behavior
+
+Recommended behavior:
+- use `interactionMode: "auto"`
+- let the SDK choose popup on desktop-like environments
+- let the SDK choose redirect on mobile-like environments
+- allow the default popup-to-redirect fallback when popup opening is blocked
+
+This keeps the app integration simple while making mobile web and privacy-restricted environments more reliable.
+
 ## Notes
 
 - Keep the callback page same-origin with the opener.
 - Register the exact callback URL in the Developers UI.
 - Do not expose `TCM_OAUTH_CLIENT_SECRET` to the browser.
+- Popup-specific exports still exist for compatibility, but the neutral `useTcmOAuth` + `TcmOAuthCallbackPage` path is now the recommended production integration.

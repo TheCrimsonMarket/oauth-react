@@ -158,6 +158,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
     const loginPromise = new Promise<TcmAuthCodePayload>((resolve, reject) => {
       let flowId: string | null = null;
       let settled = false;
+      let popup: Window | null = null;
 
       const rejectFlow = (error: TcmOAuthError, finalize = true) => {
         if (settled) return;
@@ -181,6 +182,14 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
       void (async () => {
         try {
           const redirectUri = toRedirectUri(callbackPath);
+          popup = openPopup('', popupSize);
+          if (!popup) {
+            releaseFlowStartSlot();
+            clearTransaction();
+            rejectFlow(createError('popup_blocked', 'Popup blocked by browser.', provider), false);
+            return;
+          }
+
           const { codeVerifier, codeChallenge } = await createPkcePair();
           const state = createState();
           const now = Date.now();
@@ -206,15 +215,10 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
             state,
             codeChallenge,
             provider,
+            interactionMode: 'popup',
           });
 
-          const popup = openPopup(authUrl, popupSize);
-          if (!popup) {
-            releaseFlowStartSlot();
-            clearTransaction();
-            rejectFlow(createError('popup_blocked', 'Popup blocked by browser.', provider), false);
-            return;
-          }
+          popup.location.href = authUrl;
 
           flowId = activatePopupFlow({
             popup,
@@ -265,6 +269,13 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
         } catch (cause) {
           releaseFlowStartSlot();
           clearTransaction();
+          if (popup && !popup.closed) {
+            try {
+              popup.close();
+            } catch {
+              // noop
+            }
+          }
           rejectFlow(createError('unknown_error', 'Failed to start OAuth popup flow.', provider, cause), false);
         }
       })();

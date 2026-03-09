@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { handleOAuthCallback } from '../client/callback';
 
-export function TcmPopupCallbackPage() {
+export function TcmOAuthCallbackPage() {
   useEffect(() => {
     handleOAuthCallback();
   }, []);
@@ -9,8 +9,8 @@ export function TcmPopupCallbackPage() {
   return (
     <main className="tcm-oauth-callback">
       <h1>Authentication complete</h1>
-      <p>This popup can be closed now.</p>
-      <p>If it does not close automatically, close it manually and return to the previous tab.</p>
+      <p>Completing sign-in and returning you to the app.</p>
+      <p>If nothing happens, return to the previous page and try again.</p>
     </main>
   );
 }
