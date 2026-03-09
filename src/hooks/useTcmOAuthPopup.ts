@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { createError } from '../internal/errors';
 import { setFlowDone, setFlowError } from '../internal/flowCoordinator';
 import { createTcmOAuthClient } from '../client/createTcmOAuthClient';
@@ -45,6 +45,23 @@ export function useTcmOAuthPopup<TExchangeResult = unknown>(
   const error = snapshot.error;
   const authenticating = snapshot.authenticating;
 
+  // Keep handlers current without forcing startLogin identity churn each render.
+  const exchangeCodeRef = useRef(options.exchangeCode);
+  const onSuccessRef = useRef(options.onSuccess);
+  const onErrorRef = useRef(options.onError);
+
+  useEffect(() => {
+    exchangeCodeRef.current = options.exchangeCode;
+  }, [options.exchangeCode]);
+
+  useEffect(() => {
+    onSuccessRef.current = options.onSuccess;
+  }, [options.onSuccess]);
+
+  useEffect(() => {
+    onErrorRef.current = options.onError;
+  }, [options.onError]);
+
   const startLogin = useCallback(
     async (provider: TcmProvider) => {
       let payload;
@@ -52,15 +69,15 @@ export function useTcmOAuthPopup<TExchangeResult = unknown>(
         payload = await client.loginWithPopup({ provider });
       } catch (cause) {
         const nextError = normalizeCaughtError(cause);
-        options.onError?.(nextError);
+        onErrorRef.current?.(nextError);
         return;
       }
 
       try {
-        const exchangeResult = await options.exchangeCode(payload);
+        const exchangeResult = await exchangeCodeRef.current(payload);
         setFlowDone(payload._tcmFlowId ?? null);
         try {
-          await options.onSuccess?.(exchangeResult);
+          await onSuccessRef.current?.(exchangeResult);
         } catch (cause) {
           logNonFatalOnSuccessError(cause);
         }
@@ -69,10 +86,10 @@ export function useTcmOAuthPopup<TExchangeResult = unknown>(
         setFlowError(nextError, {
           flowId: payload._tcmFlowId ?? null,
         });
-        options.onError?.(nextError);
+        onErrorRef.current?.(nextError);
       }
     },
-    [client, options],
+    [client],
   );
 
   return useMemo(
