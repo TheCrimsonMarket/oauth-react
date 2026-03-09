@@ -1,0 +1,74 @@
+export type TcmProvider =
+  | 'google'
+  | 'steam'
+  | 'battlenet'
+  | 'discord'
+  | 'twitch'
+  | 'credentials';
+
+export type TcmOAuthPhase =
+  | 'idle'
+  | 'preparing'
+  | 'interactive_provider'
+  | 'exchanging_partner'
+  | 'done'
+  | 'error';
+
+export type TcmOAuthErrorCode =
+  | 'popup_blocked'
+  | 'popup_closed'
+  | 'state_mismatch'
+  | 'txn_missing'
+  | 'txn_expired'
+  | 'provider_error'
+  | 'exchange_failed'
+  | 'config_error'
+  | 'unsupported_browser'
+  | 'unknown_error';
+
+export interface TcmOAuthError {
+  code: TcmOAuthErrorCode;
+  message: string;
+  provider?: TcmProvider;
+  cause?: unknown;
+}
+
+export interface TcmAuthCodePayload {
+  code: string;
+  state: string;
+  codeVerifier: string;
+  redirectUri: string;
+  provider: TcmProvider;
+  _tcmFlowId?: string;
+  _tcmMessageId?: string;
+}
+
+export interface UseTcmOAuthPopupOptions<TExchangeResult = unknown> {
+  clientId: string;
+  tcmWebUrl: string;
+  callbackPath?: string;
+  scope?: string;
+  exchangeCode: (payload: TcmAuthCodePayload) => Promise<TExchangeResult>;
+  popup?: { width?: number; height?: number };
+  onSuccess?: (result: TExchangeResult) => void | Promise<void>;
+  onError?: (error: TcmOAuthError) => void;
+}
+
+export interface UseTcmOAuthPopupReturn<TExchangeResult = unknown> {
+  authenticating: boolean;
+  phase: TcmOAuthPhase;
+  error: TcmOAuthError | null;
+  startLogin: (provider: TcmProvider) => Promise<void>;
+  clearError: () => void;
+}
+
+export type PopupResult =
+  | { type: 'tcm_oauth_result'; ok: true; code: string; state: string; iss?: string }
+  | {
+      type: 'tcm_oauth_result';
+      ok: false;
+      error: string;
+      error_description?: string;
+      state?: string;
+      iss?: string;
+    };

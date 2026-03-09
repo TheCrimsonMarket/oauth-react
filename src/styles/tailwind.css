@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .tcm-oauth-panel {
+    @apply w-full max-w-md mx-auto rounded-2xl border border-[#531a1a] bg-[#170404] p-4 space-y-3;
+  }
+
+  .tcm-oauth-btn {
+    @apply w-full rounded-xl border border-[#842727] bg-[#2b0b0b] text-[#f6d8d8] py-3 px-4 text-sm font-semibold transition-colors;
+  }
+
+  .tcm-oauth-btn:hover {
+    @apply bg-[#3c1010];
+  }
+
+  .tcm-oauth-btn:disabled {
+    @apply opacity-60 cursor-not-allowed;
+  }
+
+  .tcm-oauth-callback {
+    @apply min-h-screen bg-[#120303] text-[#f6d8d8] flex flex-col items-center justify-center gap-2 px-6 text-center;
+  }
+
+  .tcm-oauth-callback h1 {
+    @apply text-2xl font-bold;
+  }
+
+  .tcm-oauth-callback p {
+    @apply text-sm opacity-90;
+  }
+}
