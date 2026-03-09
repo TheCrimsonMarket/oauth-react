@@ -1,30 +1,30 @@
-# @thecrimsonmarket/oauth-react
+# @crimsoncorp/oauth-react
 
 Popup-first OAuth SDK for TCM providers with strict PKCE/state handling.
 
 ## Install
 
 ```bash
-npm install @thecrimsonmarket/oauth-react
+npm install @crimsoncorp/oauth-react
 ```
 
 ## Choose Your Integration Path
 
 1. React app (recommended for React): use `useTcmOAuthPopup` and optional SDK UI components.
-2. Vanilla browser app: use `@thecrimsonmarket/oauth-react/client`.
-3. Backend exchange helpers (Node/server routes): use `@thecrimsonmarket/oauth-react/server`.
+2. Vanilla browser app: use `@crimsoncorp/oauth-react/client`.
+3. Backend exchange helpers (Node/server routes): use `@crimsoncorp/oauth-react/server`.
 
 SDK styles are opt-in:
 
 ```ts
-import '@thecrimsonmarket/oauth-react/styles.css';
+import '@crimsoncorp/oauth-react/styles.css';
 ```
 
 ## React Quickstart
 
 ```tsx
-import { useTcmOAuthPopup } from '@thecrimsonmarket/oauth-react';
-import '@thecrimsonmarket/oauth-react/styles.css';
+import { useTcmOAuthPopup } from '@crimsoncorp/oauth-react';
+import '@crimsoncorp/oauth-react/styles.css';
 
 export function LoginButton() {
   const oauth = useTcmOAuthPopup({
@@ -53,7 +53,7 @@ export function LoginButton() {
 Render callback page on your app origin:
 
 ```tsx
-import { TcmPopupCallbackPage } from '@thecrimsonmarket/oauth-react';
+import { TcmPopupCallbackPage } from '@crimsoncorp/oauth-react';
 
 export default function Page() {
   return <TcmPopupCallbackPage />;
@@ -68,7 +68,7 @@ Scope note:
 ## Vanilla Browser Quickstart
 
 ```ts
-import { createTcmOAuthClient } from '@thecrimsonmarket/oauth-react/client';
+import { createTcmOAuthClient } from '@crimsoncorp/oauth-react/client';
 
 const oauthClient = createTcmOAuthClient({
   clientId: 'tcm_xxx',
@@ -95,7 +95,7 @@ document.querySelector('#login')?.addEventListener('click', async () => {
 For callback route in a plain HTML page:
 
 ```ts
-import { postPopupCallbackResult } from '@thecrimsonmarket/oauth-react/client/callback';
+import { postPopupCallbackResult } from '@crimsoncorp/oauth-react/client/callback';
 
 postPopupCallbackResult();
 ```
@@ -103,7 +103,7 @@ postPopupCallbackResult();
 ## Server Helpers Quickstart (Next.js/Node)
 
 ```ts
-import { resolvePopupRedirectUri, toPkceS256Challenge } from '@thecrimsonmarket/oauth-react/server';
+import { resolvePopupRedirectUri, toPkceS256Challenge } from '@crimsoncorp/oauth-react/server';
 
 const redirectUri = resolvePopupRedirectUri({
   requestUrl: req.url,
@@ -116,11 +116,11 @@ const challenge = toPkceS256Challenge(codeVerifier);
 
 ## Public Exports
 
-1. Root (`@thecrimsonmarket/oauth-react`): React hook/components and shared types.
-2. Client (`@thecrimsonmarket/oauth-react/client`): framework-agnostic browser OAuth client.
-3. Client callback helper (`@thecrimsonmarket/oauth-react/client/callback`): one-shot callback poster.
-4. Server (`@thecrimsonmarket/oauth-react/server`): server-safe helpers for PKCE challenge and redirect URI resolution.
-5. Styles (`@thecrimsonmarket/oauth-react/styles.css`): bundled SDK UI styles.
+1. Root (`@crimsoncorp/oauth-react`): React hook/components and shared types.
+2. Client (`@crimsoncorp/oauth-react/client`): framework-agnostic browser OAuth client.
+3. Client callback helper (`@crimsoncorp/oauth-react/client/callback`): one-shot callback poster.
+4. Server (`@crimsoncorp/oauth-react/server`): server-safe helpers for PKCE challenge and redirect URI resolution.
+5. Styles (`@crimsoncorp/oauth-react/styles.css`): bundled SDK UI styles.
 
 ## Behavior Guarantees
 
@@ -149,3 +149,4 @@ const challenge = toPkceS256Challenge(codeVerifier);
 ```bash
 npm i -D @rollup/rollup-win32-x64-msvc
 ```
+

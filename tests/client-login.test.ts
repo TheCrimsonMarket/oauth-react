@@ -183,9 +183,11 @@ describe('createTcmOAuthClient', () => {
 
     expect(focusActivePopup).toHaveBeenCalledTimes(1);
     expect(openPopup).toHaveBeenCalledTimes(1);
-    expect(onPopupResult).toBeTypeOf('function');
-
-    await onPopupResult?.({
+    if (!onPopupResult) {
+      throw new Error('Expected onPopupResult handler to be set');
+    }
+    const onPopupResultHandler = onPopupResult as (result: unknown) => Promise<void>;
+    await onPopupResultHandler({
       type: 'tcm_oauth_result',
       ok: true,
       code: 'auth-code-1',
@@ -235,8 +237,11 @@ describe('createTcmOAuthClient', () => {
 
     await Promise.resolve();
 
-    expect(onPopupResult).toBeTypeOf('function');
-    await onPopupResult?.({
+    if (!onPopupResult) {
+      throw new Error('Expected onPopupResult handler to be set');
+    }
+    const onPopupResultHandler = onPopupResult as (result: unknown) => Promise<void>;
+    await onPopupResultHandler({
       type: 'tcm_oauth_result',
       ok: true,
       code: 'auth-code-1',
