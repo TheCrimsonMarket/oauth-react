@@ -14,10 +14,15 @@ const outputs = [
     content: `export * from './client-callback';
 `,
   },
+  {
+    file: 'nextjs.d.ts',
+    content: `export * from './nextjs';
+`,
+  },
 ];
 
 await Promise.all(
   outputs.map(({ file, content }) => writeFile(resolve(distDir, file), content, 'utf8')),
 );
 
-console.log('Declaration entry files ensured: dist/client.d.ts, dist/callback.d.ts');
+console.log('Declaration entry files ensured: dist/client.d.ts, dist/callback.d.ts, dist/nextjs.d.ts');

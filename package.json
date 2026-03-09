@@ -1,6 +1,6 @@
 {
   "name": "@crimsoncorp/oauth-react",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "description": "TCM OAuth popup SDK for React apps",
   "license": "MIT",
   "type": "module",
@@ -30,6 +30,11 @@
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js",
       "require": "./dist/server.cjs"
+    },
+    "./nextjs": {
+      "types": "./dist/nextjs.d.ts",
+      "import": "./dist/nextjs.js",
+      "require": "./dist/nextjs.cjs"
     },
     "./styles.css": "./dist/styles.css"
   },

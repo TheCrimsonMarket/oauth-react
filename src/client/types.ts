@@ -38,3 +38,16 @@ export interface TcmOAuthClient {
   getSnapshot: () => TcmOAuthClientSnapshot;
   focusActivePopup: () => boolean;
 }
+
+export type TcmOAuthDiagnosticsMode = 'auto' | 'always' | 'never';
+
+export interface CreateTcmOAuthPopupRouteClientOptions<TExchangeResult = unknown> extends CreateTcmOAuthClientOptions {
+  exchangeEndpoint?: string;
+  diagnostics?: TcmOAuthDiagnosticsMode;
+  fetch?: typeof fetch;
+}
+
+export interface TcmOAuthPopupRouteClient<TExchangeResult = unknown> extends TcmOAuthClient {
+  exchangeCodeViaRoute: (payload: TcmAuthCodePayload) => Promise<TExchangeResult>;
+  loginWithPopupRoute: (params: TcmOAuthPopupLoginParams) => Promise<TExchangeResult>;
+}

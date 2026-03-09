@@ -62,6 +62,29 @@ export interface UseTcmOAuthPopupReturn<TExchangeResult = unknown> {
   clearError: () => void;
 }
 
+export type TcmOAuthDiagnosticsMode = 'auto' | 'always' | 'never';
+
+export interface UseTcmOAuthPopupRouteOptions<TExchangeResult = unknown> {
+  clientId: string;
+  tcmWebUrl: string;
+  exchangeEndpoint?: string;
+  callbackPath?: string;
+  scope?: string;
+  popup?: { width?: number; height?: number };
+  diagnostics?: TcmOAuthDiagnosticsMode;
+  fetch?: typeof fetch;
+  onSuccess?: (result: TExchangeResult) => void | Promise<void>;
+  onError?: (error: TcmOAuthError) => void;
+}
+
+export interface UseTcmOAuthPopupRouteReturn<TExchangeResult = unknown> {
+  authenticating: boolean;
+  phase: TcmOAuthPhase;
+  error: TcmOAuthError | null;
+  startLogin: (provider: TcmProvider) => Promise<void>;
+  clearError: () => void;
+}
+
 export type PopupResult =
   | { type: 'tcm_oauth_result'; ok: true; code: string; state: string; iss?: string }
   | {

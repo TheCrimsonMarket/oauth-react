@@ -67,14 +67,36 @@ function toClientPhase(phase: TcmOAuthPhase): TcmOAuthClientPhase {
   return phase;
 }
 
-function toClientSnapshot(): TcmOAuthClientSnapshot {
-  const snapshot = getFlowSnapshot();
-  return {
-    phase: toClientPhase(snapshot.phase),
-    error: snapshot.error,
-    activeProvider: snapshot.activeProvider,
-    flowId: snapshot.activeFlowId,
-    authenticating: snapshot.authenticating,
+function snapshotsMatch(a: TcmOAuthClientSnapshot | null, b: TcmOAuthClientSnapshot): boolean {
+  if (!a) return false;
+  return (
+    a.phase === b.phase &&
+    a.error === b.error &&
+    a.activeProvider === b.activeProvider &&
+    a.flowId === b.flowId &&
+    a.authenticating === b.authenticating
+  );
+}
+
+function createSnapshotReader(): () => TcmOAuthClientSnapshot {
+  let cachedSnapshot: TcmOAuthClientSnapshot | null = null;
+
+  return () => {
+    const snapshot = getFlowSnapshot();
+    const nextSnapshot: TcmOAuthClientSnapshot = {
+      phase: toClientPhase(snapshot.phase),
+      error: snapshot.error,
+      activeProvider: snapshot.activeProvider,
+      flowId: snapshot.activeFlowId,
+      authenticating: snapshot.authenticating,
+    };
+
+    if (snapshotsMatch(cachedSnapshot, nextSnapshot)) {
+      return cachedSnapshot as TcmOAuthClientSnapshot;
+    }
+
+    cachedSnapshot = nextSnapshot;
+    return nextSnapshot;
   };
 }
 
@@ -97,6 +119,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
     width: options.popup?.width ?? DEFAULT_POPUP_SIZE.width,
     height: options.popup?.height ?? DEFAULT_POPUP_SIZE.height,
   };
+  const getSnapshot = createSnapshotReader();
 
   const ownerInstanceId = createInstanceId();
 
@@ -263,7 +286,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
       getSharedClientState().inFlightLoginPromise = null;
     },
     subscribe: (listener: () => void) => subscribeFlowSnapshot(listener),
-    getSnapshot: () => toClientSnapshot(),
+    getSnapshot,
     focusActivePopup: () => focusActivePopup(),
   };
 }

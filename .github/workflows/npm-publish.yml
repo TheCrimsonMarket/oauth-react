@@ -19,9 +19,30 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org/
 
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Show tool versions
+        run: |
+          node -v
+          npm -v
+
+      - name: Show publish target
+        run: |
+          node -p "const pkg=require('./package.json'); console.log('package:', pkg.name); console.log('version:', pkg.version); console.log('publishConfig:', JSON.stringify(pkg.publishConfig || {}, null, 2));"
+          npm config get registry
+
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
       - run: npm run verify:artifacts
-      - run: npm publish --access public
+
+      - name: Dry-run package publish
+        run: npm pack --dry-run
+
+      - name: Check current npm registry state
+        run: npm view @crimsoncorp/oauth-react version --registry=https://registry.npmjs.org || true
+
+      - name: Publish package
+        run: npm publish --access public

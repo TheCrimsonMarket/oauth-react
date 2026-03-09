@@ -95,25 +95,25 @@ function getState(): FlowCoordinatorState {
 }
 
 function pruneConsumedStates(state: FlowCoordinatorState, now = Date.now()): void {
-  for (const [callbackState, consumedAt] of state.consumedStates.entries()) {
+  state.consumedStates.forEach((consumedAt, callbackState) => {
     if (now - consumedAt > CALLBACK_STATE_TTL_MS) {
       state.consumedStates.delete(callbackState);
     }
-  }
+  });
 }
 
 function pruneClaimedTransactions(state: FlowCoordinatorState, now = Date.now()): void {
-  for (const [flowId, claimedAt] of state.claimedTransactions.entries()) {
+  state.claimedTransactions.forEach((claimedAt, flowId) => {
     if (now - claimedAt > TRANSACTION_CLAIM_TTL_MS) {
       state.claimedTransactions.delete(flowId);
     }
-  }
+  });
 }
 
 function notifySubscribers(state: FlowCoordinatorState): void {
-  for (const subscriber of state.subscribers) {
+  state.subscribers.forEach((subscriber) => {
     subscriber();
-  }
+  });
 }
 
 function publishSnapshot(state: FlowCoordinatorState, patch: Partial<FlowSnapshot>): void {

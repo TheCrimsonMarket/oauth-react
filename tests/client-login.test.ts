@@ -261,4 +261,28 @@ describe('createTcmOAuthClient', () => {
     expect(setFlowExchanging).toHaveBeenCalledWith('flow-1');
     expect(finishPopupFlow).toHaveBeenCalledWith('flow-1');
   });
+
+  it('returns the same snapshot reference when flow state has not changed', () => {
+    const stableSnapshot = {
+      phase: 'idle',
+      error: null,
+      activeFlowId: null,
+      activeProvider: null,
+      ownerInstanceId: null,
+      exchangeStarted: false,
+      terminal: false,
+      authenticating: false,
+    };
+    getFlowSnapshot.mockReturnValue(stableSnapshot);
+
+    const client = createTcmOAuthClient({
+      clientId: 'client-1',
+      tcmWebUrl: 'https://www.thecrimsonmarket.com',
+    });
+
+    const firstSnapshot = client.getSnapshot();
+    const secondSnapshot = client.getSnapshot();
+
+    expect(secondSnapshot).toBe(firstSnapshot);
+  });
 });
