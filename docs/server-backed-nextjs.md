@@ -31,10 +31,22 @@ export default function Page() {
 
 Mount this at `/auth/tcm/callback`.
 
-## 2. Exchange Route
+## 2. Exchange Route and Session Adapter
 
 ```ts
-import { createTcmOAuthExchangeRoute } from "@crimsoncorp/oauth-react/nextjs";
+import {
+  createTcmCookieSessionAdapter,
+  resolveTcmAuthSession,
+} from "@crimsoncorp/oauth-react/server";
+import {
+  createTcmLogoutRoute,
+  createTcmOAuthExchangeRoute,
+} from "@crimsoncorp/oauth-react/nextjs";
+
+const sessionAdapter = createTcmCookieSessionAdapter({
+  appId: "my-app",
+  maxAgeSeconds: 60 * 60 * 24,
+});
 
 const route = createTcmOAuthExchangeRoute({
   oauth: {
@@ -61,10 +73,7 @@ const route = createTcmOAuthExchangeRoute({
     };
   },
   applySession(response, session) {
-    response.headers.append(
-      "set-cookie",
-      `app_session=${session.id}; Path=/; HttpOnly; SameSite=Lax`,
-    );
+    sessionAdapter.apply(response, session.id);
   },
 });
 
@@ -81,10 +90,63 @@ export const { POST } = route;
 
 Your app still owns:
 - user creation or lookup
-- local session cookie format
+- session payload signing and verification
 - response body shape
 
-## 3. Browser Hook
+## 3. Runtime Auth Resolution
+
+Mixed-mode apps should resolve auth per request instead of choosing a global build-time auth mode.
+
+```ts
+function readStandaloneSession(request: Request) {
+  const cookieValue = sessionAdapter.read(request);
+  return cookieValue ? { sub: cookieValue } : null;
+}
+
+function readParentAuthToken(request: Request) {
+  const hasParentCookie = request.headers.get("cookie")?.includes("authToken=");
+  return hasParentCookie ? { sub: "host-user-id" } : null;
+}
+
+export function getSessionFromRequest(request: Request) {
+  return resolveTcmAuthSession(request, {
+    sources: [
+      { name: "sdk_session", resolve: readStandaloneSession },
+      { name: "parent_auth_token", resolve: readParentAuthToken },
+    ],
+    precedence: ["sdk_session", "parent_auth_token"],
+  });
+}
+```
+
+Recommended behavior:
+- standalone apps use only `sdk_session`
+- embedded shared-domain apps keep host-owned `authToken`
+- mixed-mode apps like `socialriddle` resolve `sdk_session` first and fall back to `parent_auth_token`
+
+## 4. Logout Route
+
+```ts
+const logoutRoute = createTcmLogoutRoute({
+  resolveSession: getSessionFromRequest,
+  standaloneSessionAdapter: sessionAdapter,
+  onSharedCookieLogout() {
+    return Response.json({
+      success: true,
+      authSource: "parent_auth_token",
+      delegated: true,
+    });
+  },
+});
+
+export const { GET, POST } = logoutRoute;
+```
+
+Behavior:
+- `sdk_session` clears the SDK-managed standalone cookie
+- `parent_auth_token` delegates to host/platform logout logic and does not clear the standalone cookie
+
+## 5. Browser Hook
 
 ```tsx
 import { useTcmOAuth } from "@crimsoncorp/oauth-react";
@@ -121,4 +183,6 @@ This keeps the app integration simple while making mobile web and privacy-restri
 - Keep the callback page same-origin with the opener.
 - Register the exact callback URL in the Developers UI.
 - Do not expose `TCM_OAUTH_CLIENT_SECRET` to the browser.
+- Use `createTcmCookieSessionAdapter` so the SDK owns standalone session cookie naming and clearing.
+- Embedded shared-domain `authToken` remains host-owned and is not replaced by the SDK cookie adapter.
 - Popup-specific exports still exist for compatibility, but the neutral `useTcmOAuth` + `TcmOAuthCallbackPage` path is now the recommended production integration.

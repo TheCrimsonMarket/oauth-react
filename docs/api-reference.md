@@ -15,7 +15,7 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
 - `@crimsoncorp/oauth-react/server`
   - Framework-neutral server helpers and types
 - `@crimsoncorp/oauth-react/nextjs`
-  - Next.js App Router exchange route factory
+  - Next.js App Router exchange and logout route factories
 
 ### Recommended Abstraction Levels
 
@@ -23,7 +23,10 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
   - `useTcmOAuth`
   - `TcmOAuthCallbackPage`
   - `createTcmOAuthRouteClient`
+  - `createTcmCookieSessionAdapter`
+  - `resolveTcmAuthSession`
   - `createTcmOAuthExchangeRoute`
+  - `createTcmLogoutRoute`
 - Use lower-level APIs only when you need custom exchange handling:
   - `useTcmOAuthPopup`
   - `useTcmOAuthPopupRoute`
@@ -265,6 +268,86 @@ function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
 
 - Meaning:
   - controls whether route-backed browser requests send diagnostics headers
+
+## Server Exports
+
+### `createTcmCookieSessionAdapter`
+
+- Import:
+  - `import { createTcmCookieSessionAdapter } from "@crimsoncorp/oauth-react/server"`
+- Purpose:
+  - creates the SDK-owned standalone session cookie adapter for reading, setting, serializing, and clearing the app-local cookie
+- Signature:
+
+```ts
+function createTcmCookieSessionAdapter(
+  options: CreateTcmCookieSessionAdapterOptions,
+): TcmCookieSessionAdapter;
+```
+
+- Key options:
+  - `appId: string`
+  - `cookieDomain?: string`
+  - `cookiePath?: string`
+  - `maxAgeSeconds?: number`
+  - `httpOnly?: boolean`
+  - `sameSite?: "lax" | "strict" | "none"`
+  - `secure?: boolean`
+
+### `resolveTcmAuthSession`
+
+- Import:
+  - `import { resolveTcmAuthSession } from "@crimsoncorp/oauth-react/server"`
+- Purpose:
+  - resolves auth across one or more request-scoped sources and annotates the winning session with `authSource`
+- Signature:
+
+```ts
+function resolveTcmAuthSession<TSession extends Record<string, unknown>>(
+  request: Request,
+  options: ResolveTcmAuthSessionOptions<TSession>,
+): (TSession & { authSource: string }) | null;
+```
+
+- Recommended source names:
+  - `sdk_session`
+  - `parent_auth_token`
+
+## Next.js Exports
+
+### `createTcmOAuthExchangeRoute`
+
+- Import:
+  - `import { createTcmOAuthExchangeRoute } from "@crimsoncorp/oauth-react/nextjs"`
+- Purpose:
+  - creates a Next.js App Router POST route for the OAuth exchange flow
+
+### `createTcmLogoutRoute`
+
+- Import:
+  - `import { createTcmLogoutRoute } from "@crimsoncorp/oauth-react/nextjs"`
+- Purpose:
+  - creates a Next.js App Router logout route that clears SDK-managed standalone sessions and delegates shared host-cookie logout
+- Signature:
+
+```ts
+function createTcmLogoutRoute<TSession extends Record<string, unknown>>(
+  options: CreateTcmLogoutRouteOptions<TSession>,
+): {
+  GET: (request: Request) => Promise<Response>;
+  POST: (request: Request) => Promise<Response>;
+};
+```
+
+- Key options:
+  - `resolveSession(request)`
+  - `standaloneSessionAdapter`
+  - `standaloneAuthSources?: string[]`
+    - default: `["sdk_session"]`
+  - `onSharedCookieLogout?(context)`
+- Behavior:
+  - clears the standalone SDK cookie only when the resolved session source is classified as standalone
+  - does not clear host-owned `parent_auth_token` sessions unless you explicitly opt into that behavior
 
 ### `UseTcmOAuthPopupOptions<TExchangeResult>`
 
