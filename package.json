@@ -1,6 +1,6 @@
 {
   "name": "@crimsoncorp/oauth-react",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "TCM OAuth popup SDK for React apps",
   "license": "MIT",
   "type": "module",

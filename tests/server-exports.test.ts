@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createTcmCookieSessionAdapter,
   exchangeTcmAuthorizationCode,
   exchangeTcmPopupCode,
   fetchTcmUserInfo,
+  resolveTcmAuthSession,
   resolvePopupRedirectUri,
   toPkceS256Challenge,
 } from '../src/server';
-import { createTcmOAuthExchangeRoute } from '../src/nextjs';
+import { createTcmLogoutRoute, createTcmOAuthExchangeRoute } from '../src/nextjs';
 
 describe('server exports', () => {
   it('exposes server helpers from the server barrel', () => {
@@ -15,6 +17,9 @@ describe('server exports', () => {
     expect(typeof exchangeTcmAuthorizationCode).toBe('function');
     expect(typeof exchangeTcmPopupCode).toBe('function');
     expect(typeof fetchTcmUserInfo).toBe('function');
+    expect(typeof createTcmCookieSessionAdapter).toBe('function');
+    expect(typeof resolveTcmAuthSession).toBe('function');
     expect(typeof createTcmOAuthExchangeRoute).toBe('function');
+    expect(typeof createTcmLogoutRoute).toBe('function');
   });
 });

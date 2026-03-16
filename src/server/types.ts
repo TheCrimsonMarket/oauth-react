@@ -1,4 +1,10 @@
 import type { TcmAuthCodePayload, TcmProvider } from '../types';
+import type {
+  CreateTcmCookieSessionAdapterOptions,
+  ResolveTcmAuthSessionOptions,
+  TcmAuthSessionSource,
+  TcmCookieSessionAdapter,
+} from './session';
 
 export interface TcmOAuthTokenSet {
   accessToken: string;
@@ -102,4 +108,23 @@ export interface CreateTcmOAuthExchangeRouteOptions<TSession = unknown, TBody = 
     session: TSession,
     context: { request: Request; traceId: string; correlation: TcmOAuthCorrelationContext },
   ) => Promise<void> | void;
+}
+
+export type {
+  CreateTcmCookieSessionAdapterOptions,
+  ResolveTcmAuthSessionOptions,
+  TcmAuthSessionSource,
+  TcmCookieSessionAdapter,
+};
+
+export interface CreateTcmLogoutRouteOptions<TSession extends Record<string, unknown>> {
+  resolveSession: (
+    request: Request,
+  ) => Promise<(TSession & { authSource: string }) | null> | (TSession & { authSource: string }) | null;
+  standaloneSessionAdapter: TcmCookieSessionAdapter;
+  standaloneAuthSources?: string[];
+  onSharedCookieLogout?: (context: {
+    request: Request;
+    session: TSession & { authSource: string };
+  }) => Promise<Response | null | void> | Response | null | void;
 }
