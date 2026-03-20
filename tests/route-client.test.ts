@@ -6,6 +6,8 @@ const {
   subscribe,
   getSnapshot,
   focusActivePopup,
+  setFlowDone,
+  setFlowError,
 } = vi.hoisted(() => ({
   loginWithPopup: vi.fn(),
   clearError: vi.fn(),
@@ -18,6 +20,8 @@ const {
     authenticating: false,
   })),
   focusActivePopup: vi.fn(() => true),
+  setFlowDone: vi.fn(),
+  setFlowError: vi.fn(),
 }));
 
 vi.mock('../src/client/createTcmOAuthClient', () => ({
@@ -30,6 +34,11 @@ vi.mock('../src/client/createTcmOAuthClient', () => ({
   })),
 }));
 
+vi.mock('../src/internal/flowCoordinator', () => ({
+  setFlowDone,
+  setFlowError,
+}));
+
 import { createTcmOAuthPopupRouteClient } from '../src/client/createTcmOAuthPopupRouteClient';
 
 describe('createTcmOAuthPopupRouteClient', () => {
@@ -39,6 +48,8 @@ describe('createTcmOAuthPopupRouteClient', () => {
     subscribe.mockClear();
     getSnapshot.mockClear();
     focusActivePopup.mockClear();
+    setFlowDone.mockReset();
+    setFlowError.mockReset();
   });
 
   it('exchanges a popup payload against the configured route', async () => {
@@ -86,6 +97,7 @@ describe('createTcmOAuthPopupRouteClient', () => {
         _tcmMessageId: 'msg-1',
       }),
     });
+    expect(setFlowDone).toHaveBeenCalledWith('flow-1');
   });
 
   it('normalizes non-2xx exchange failures', async () => {
@@ -101,6 +113,7 @@ describe('createTcmOAuthPopupRouteClient', () => {
       codeVerifier: 'verifier-1',
       redirectUri: 'http://localhost:3693/auth/tcm/popup-callback',
       provider: 'google',
+      _tcmFlowId: 'flow-1',
     });
 
     const client = createTcmOAuthPopupRouteClient({
@@ -114,5 +127,13 @@ describe('createTcmOAuthPopupRouteClient', () => {
       message: 'bad exchange',
       provider: 'google',
     });
+    expect(setFlowError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 'exchange_failed',
+        message: 'bad exchange',
+        provider: 'google',
+      }),
+      { flowId: 'flow-1' },
+    );
   });
 });

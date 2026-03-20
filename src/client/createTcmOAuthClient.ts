@@ -1,5 +1,9 @@
 import { createError, normalizeProviderError } from '../internal/errors';
 import {
+  clearRedirectResult,
+  clearRedirectTransaction,
+} from '../internal/redirect';
+import {
   activatePopupFlow,
   claimFlowTransaction,
   clearConsumedCallbackState,
@@ -56,6 +60,18 @@ function getSharedClientState(): SharedClientState {
     clientWindow.__tcmOauthClientState = { inFlightLoginPromise: null };
   }
   return clientWindow.__tcmOauthClientState;
+}
+
+export function resetTcmOAuthBrowserStateInternal(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  resetSharedFlowState();
+  clearTransaction();
+  clearRedirectTransaction();
+  clearRedirectResult();
+  getSharedClientState().inFlightLoginPromise = null;
 }
 
 function toRedirectUri(callbackPath: string): string {
@@ -305,8 +321,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
   return {
     loginWithPopup,
     clearError: () => {
-      resetSharedFlowState();
-      getSharedClientState().inFlightLoginPromise = null;
+      resetTcmOAuthBrowserStateInternal();
     },
     subscribe: (listener: () => void) => subscribeFlowSnapshot(listener),
     getSnapshot,

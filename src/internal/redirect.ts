@@ -59,9 +59,13 @@ export function hasPendingRedirectResult(): boolean {
   return window.sessionStorage.getItem(REDIRECT_RESULT_STORAGE_KEY) !== null;
 }
 
+export function clearRedirectResult(): void {
+  window.sessionStorage.removeItem(REDIRECT_RESULT_STORAGE_KEY);
+}
+
 export function consumeRedirectResult(): PopupResult | null {
   const result = readJson<PopupResult>(REDIRECT_RESULT_STORAGE_KEY);
-  window.sessionStorage.removeItem(REDIRECT_RESULT_STORAGE_KEY);
+  clearRedirectResult();
   return result;
 }
 

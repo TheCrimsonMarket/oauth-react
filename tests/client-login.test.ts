@@ -21,6 +21,8 @@ const {
   saveTransaction,
   consumeTransaction,
   buildAuthorizeUrl,
+  resolveTcmOAuthProvider,
+  resolveTcmOAuthScope,
 } = vi.hoisted(() => ({
   tryAcquireFlowStartSlot: vi.fn(),
   focusActivePopup: vi.fn(),
@@ -51,6 +53,8 @@ const {
   saveTransaction: vi.fn(),
   consumeTransaction: vi.fn(),
   buildAuthorizeUrl: vi.fn(),
+  resolveTcmOAuthProvider: vi.fn(),
+  resolveTcmOAuthScope: vi.fn(),
 }));
 
 vi.mock('../src/internal/flowCoordinator', () => ({
@@ -88,7 +92,18 @@ vi.mock('../src/internal/url', () => ({
   buildAuthorizeUrl,
 }));
 
+vi.mock('../src/client/policy', () => ({
+  resolveTcmOAuthProvider,
+  resolveTcmOAuthScope,
+}));
+
 import { createTcmOAuthClient } from '../src/client/createTcmOAuthClient';
+
+async function flushAsyncWork(iterations = 4) {
+  for (let index = 0; index < iterations; index += 1) {
+    await Promise.resolve();
+  }
+}
 
 function setMockWindow() {
   Object.defineProperty(globalThis, 'window', {
@@ -130,6 +145,10 @@ describe('createTcmOAuthClient', () => {
     saveTransaction.mockReset();
     consumeTransaction.mockReset();
     buildAuthorizeUrl.mockReset();
+    resolveTcmOAuthProvider.mockReset();
+    resolveTcmOAuthScope.mockReset();
+    resolveTcmOAuthProvider.mockResolvedValue('google');
+    resolveTcmOAuthScope.mockResolvedValue('profile');
   });
 
   it('focuses existing popup and returns the in-flight promise when a second start is attempted', async () => {
@@ -180,7 +199,7 @@ describe('createTcmOAuthClient', () => {
     const firstLogin = firstClient.loginWithPopup({ provider: 'google' });
     const secondLogin = secondClient.loginWithPopup({ provider: 'google' });
 
-    await Promise.resolve();
+    await flushAsyncWork();
 
     expect(focusActivePopup).toHaveBeenCalledTimes(1);
     expect(openPopup).toHaveBeenCalledTimes(1);
@@ -237,7 +256,7 @@ describe('createTcmOAuthClient', () => {
 
     const login = client.loginWithPopup({ provider: 'google' });
 
-    await Promise.resolve();
+    await flushAsyncWork();
 
     if (!onPopupResult) {
       throw new Error('Expected onPopupResult handler to be set');

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { createError } from '../internal/errors';
-import { setFlowDone, setFlowError } from '../internal/flowCoordinator';
 import type { TcmOAuthClientPhase } from '../client/types';
 import { createTcmOAuthPopupRouteClient } from '../client/createTcmOAuthPopupRouteClient';
 import type { TcmOAuthError, TcmOAuthPhase, TcmProvider } from '../types';
@@ -74,20 +73,11 @@ export function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
   const startLogin = useCallback(
     async (provider?: TcmProvider) => {
       let exchangeResult;
-      let flowId: string | null = null;
 
       try {
         exchangeResult = await client.loginWithPopupRoute({ provider });
-        flowId = client.getSnapshot().flowId;
-        setFlowDone(flowId);
       } catch (cause) {
         const nextError = normalizeCaughtError(cause);
-        const errorFlowId = client.getSnapshot().flowId;
-        if (nextError.code === 'exchange_failed') {
-          setFlowError(nextError, {
-            flowId: errorFlowId,
-          });
-        }
         onErrorRef.current?.(nextError);
         return;
       }

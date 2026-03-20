@@ -5,6 +5,7 @@ export { TcmOAuthButton } from './components/TcmOAuthButton';
 export { TcmOAuthPanel } from './components/TcmOAuthPanel';
 export { TcmOAuthCallbackPage } from './components/TcmOAuthCallbackPage';
 export { TcmPopupCallbackPage } from './components/TcmPopupCallbackPage';
+export { resetTcmOAuthBrowserState } from './browser/reset';
 
 export type {
   TcmProvider,

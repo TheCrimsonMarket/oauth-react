@@ -1,8 +1,11 @@
 import { createTcmOAuthPopupRouteClient } from './createTcmOAuthPopupRouteClient';
 import { exchangeCodeViaRoute } from './exchangeRoute';
+import { createError } from '../internal/errors';
+import { setFlowDone, setFlowError } from '../internal/flowCoordinator';
 import { resolveTcmOAuthProvider, resolveTcmOAuthScope } from './policy';
 import { resolveInteractionMode } from '../internal/interaction';
 import { hasPendingRedirectResult, resumeRedirectPayloadIfPresent, startRedirectLogin } from '../internal/redirect';
+import type { TcmAuthCodePayload, TcmOAuthError } from '../types';
 import type {
   CreateTcmOAuthRouteClientOptions,
   TcmOAuthPopupLoginParams,
@@ -19,12 +22,28 @@ export function createTcmOAuthRouteClient<TExchangeResult = unknown>(
     callbackPath: options.callbackPath ?? DEFAULT_CALLBACK_PATH,
   });
 
-  const exchangeCode = (payload: Parameters<typeof exchangeCodeViaRoute<TExchangeResult>>[0]) =>
-    exchangeCodeViaRoute<TExchangeResult>(payload, {
-      exchangeEndpoint: options.exchangeEndpoint ?? DEFAULT_EXCHANGE_ENDPOINT,
-      diagnostics: options.diagnostics ?? 'auto',
-      fetchImpl: options.fetch,
-    });
+  const finalizeExchangeError = (payload: TcmAuthCodePayload, cause: unknown): TcmOAuthError => {
+    if (cause && typeof cause === 'object' && 'code' in cause && 'message' in cause) {
+      return cause as TcmOAuthError;
+    }
+    return createError('unknown_error', 'OAuth route exchange failed.', payload.provider, cause);
+  };
+
+  const exchangeCode = async (payload: Parameters<typeof exchangeCodeViaRoute<TExchangeResult>>[0]) => {
+    try {
+      const result = await exchangeCodeViaRoute<TExchangeResult>(payload, {
+        exchangeEndpoint: options.exchangeEndpoint ?? DEFAULT_EXCHANGE_ENDPOINT,
+        diagnostics: options.diagnostics ?? 'auto',
+        fetchImpl: options.fetch,
+      });
+      setFlowDone(payload._tcmFlowId ?? null);
+      return result;
+    } catch (cause) {
+      const error = finalizeExchangeError(payload, cause);
+      setFlowError(error, { flowId: payload._tcmFlowId ?? null });
+      throw error;
+    }
+  };
 
   const resolveMode = () => resolveInteractionMode(options.interactionMode);
 
