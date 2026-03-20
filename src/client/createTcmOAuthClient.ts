@@ -19,6 +19,7 @@ import { openPopup } from '../internal/popup';
 import { SUPPORTED_PROVIDERS, isSupportedProvider } from '../internal/providers';
 import { clearTransaction, consumeTransaction, saveTransaction } from '../internal/transaction';
 import { buildAuthorizeUrl } from '../internal/url';
+import { resolveTcmOAuthProvider, resolveTcmOAuthScope } from './policy';
 import type { TcmAuthCodePayload, TcmOAuthError, TcmOAuthPhase, TcmProvider } from '../types';
 import type {
   CreateTcmOAuthClientOptions,
@@ -28,7 +29,6 @@ import type {
   TcmOAuthPopupLoginParams,
 } from './types';
 
-const DEFAULT_SCOPE = 'profile email';
 const DEFAULT_CALLBACK_PATH = '/auth/tcm/popup-callback';
 const DEFAULT_POPUP_SIZE = { width: 500, height: 650 };
 const TXN_TTL_MS = 10 * 60 * 1000;
@@ -114,7 +114,6 @@ function validateRuntime(options: CreateTcmOAuthClientOptions): TcmOAuthError | 
 
 export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmOAuthClient {
   const callbackPath = options.callbackPath ?? DEFAULT_CALLBACK_PATH;
-  const scope = options.scope ?? DEFAULT_SCOPE;
   const popupSize = {
     width: options.popup?.width ?? DEFAULT_POPUP_SIZE.width,
     height: options.popup?.height ?? DEFAULT_POPUP_SIZE.height,
@@ -124,7 +123,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
   const ownerInstanceId = createInstanceId();
 
   async function loginWithPopup(params: TcmOAuthPopupLoginParams): Promise<TcmAuthCodePayload> {
-    const provider = params.provider;
+    const requestedProvider = params.provider;
     const sharedState = getSharedClientState();
 
     const runtimeError = validateRuntime(options);
@@ -133,14 +132,27 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
       throw runtimeError;
     }
 
-    if (!isSupportedProvider(String(provider))) {
+    if (requestedProvider && !isSupportedProvider(String(requestedProvider))) {
       const error = createError(
         'config_error',
-        `Unsupported provider: ${String(provider)}. Supported providers: ${SUPPORTED_PROVIDERS.join(', ')}`,
+        `Unsupported provider: ${String(requestedProvider)}. Supported providers: ${SUPPORTED_PROVIDERS.join(', ')}`,
       );
       setFlowError(error, { ownerInstanceId });
       throw error;
     }
+
+    const effectiveProvider = await resolveTcmOAuthProvider({
+      clientId: options.clientId,
+      tcmWebUrl: options.tcmWebUrl,
+      requestedProvider,
+      fetchImpl: options.fetch,
+    });
+    const effectiveScope = await resolveTcmOAuthScope({
+      clientId: options.clientId,
+      tcmWebUrl: options.tcmWebUrl,
+      requestedScope: options.scope,
+      fetchImpl: options.fetch,
+    });
 
     const slot = tryAcquireFlowStartSlot();
     if (!slot.acquired) {
@@ -150,10 +162,10 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
       if (sharedState.inFlightLoginPromise) {
         return sharedState.inFlightLoginPromise;
       }
-      throw createError('unknown_error', IN_PROGRESS_MSG, provider);
+      throw createError('unknown_error', IN_PROGRESS_MSG, effectiveProvider);
     }
 
-    setPreparingFlow(ownerInstanceId, provider);
+    setPreparingFlow(ownerInstanceId, effectiveProvider);
 
     const loginPromise = new Promise<TcmAuthCodePayload>((resolve, reject) => {
       let flowId: string | null = null;
@@ -186,7 +198,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
           if (!popup) {
             releaseFlowStartSlot();
             clearTransaction();
-            rejectFlow(createError('popup_blocked', 'Popup blocked by browser.', provider), false);
+            rejectFlow(createError('popup_blocked', 'Popup blocked by browser.', effectiveProvider), false);
             return;
           }
 
@@ -201,7 +213,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
             state,
             codeVerifier,
             redirectUri,
-            provider,
+            provider: effectiveProvider,
             createdAt: now,
             expiresAt: now + TXN_TTL_MS,
             tcmWebUrl: options.tcmWebUrl,
@@ -211,10 +223,10 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
             tcmWebUrl: options.tcmWebUrl,
             clientId: options.clientId,
             redirectUri,
-            scope,
+            scope: effectiveScope,
             state,
             codeChallenge,
-            provider,
+            provider: effectiveProvider,
             interactionMode: 'popup',
           });
 
@@ -223,28 +235,28 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
           flowId = activatePopupFlow({
             popup,
             expectedOrigin: window.location.origin,
-            provider,
+            provider: effectiveProvider,
             ownerInstanceId,
             onPopupClosed: () => {
               clearTransaction();
-              rejectFlow(createError('popup_closed', 'Popup was closed before completing login.', provider));
+              rejectFlow(createError('popup_closed', 'Popup was closed before completing login.', effectiveProvider));
             },
             onPopupResult: async (result) => {
               if (!flowId || !claimFlowTransaction(flowId)) return;
 
               const txn = consumeTransaction();
               if (!txn) {
-                rejectFlow(createError('txn_missing', 'OAuth transaction not found.', provider));
+                rejectFlow(createError('txn_missing', 'OAuth transaction not found.', effectiveProvider));
                 return;
               }
 
               if (Date.now() > txn.expiresAt) {
-                rejectFlow(createError('txn_expired', 'OAuth transaction expired.', provider));
+                rejectFlow(createError('txn_expired', 'OAuth transaction expired.', effectiveProvider));
                 return;
               }
 
               if ((result.state || '') !== txn.state) {
-                rejectFlow(createError('state_mismatch', 'OAuth state mismatch detected.', provider));
+                rejectFlow(createError('state_mismatch', 'OAuth state mismatch detected.', effectiveProvider));
                 return;
               }
 
@@ -276,7 +288,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
               // noop
             }
           }
-          rejectFlow(createError('unknown_error', 'Failed to start OAuth popup flow.', provider, cause), false);
+          rejectFlow(createError('unknown_error', 'Failed to start OAuth popup flow.', requestedProvider, cause), false);
         }
       })();
     });

@@ -35,9 +35,10 @@ export function useTcmOAuthPopup<TExchangeResult = unknown>(
       tcmWebUrl: options.tcmWebUrl,
       callbackPath: options.callbackPath,
       scope: options.scope,
+      fetch: options.fetch,
       popup: options.popup,
     }),
-    [options.callbackPath, options.clientId, popupHeight, popupWidth, options.scope, options.tcmWebUrl],
+    [options.callbackPath, options.clientId, options.fetch, popupHeight, popupWidth, options.scope, options.tcmWebUrl],
   );
 
   const snapshot = useSyncExternalStore(client.subscribe, client.getSnapshot, client.getSnapshot);
@@ -63,7 +64,7 @@ export function useTcmOAuthPopup<TExchangeResult = unknown>(
   }, [options.onError]);
 
   const startLogin = useCallback(
-    async (provider: TcmProvider) => {
+    async (provider?: TcmProvider) => {
       let payload;
       try {
         payload = await client.loginWithPopup({ provider });

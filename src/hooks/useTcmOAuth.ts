@@ -146,7 +146,7 @@ export function useTcmOAuth<TExchangeResult = unknown>(
   }, [client, snapshot.error, snapshot.phase]);
 
   const startLogin = useCallback(
-    async (provider: TcmProvider) => {
+    async (provider?: TcmProvider) => {
       const mode = client.resolveInteractionMode();
       setResolvedInteractionMode(mode);
       setRedirectResumeState({

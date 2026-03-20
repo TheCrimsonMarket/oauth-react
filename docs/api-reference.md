@@ -38,12 +38,21 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
 
 - The SDK’s primary supported path is a server-backed app.
 - `Portal.Service` currently requires `client_secret` for token exchange.
+- Popup authorize URLs are intentionally minimal and do not carry UI-only params.
 - Redirect URI matching is exact on the server side.
 - Default recommended callback path is `/auth/tcm/callback`.
 - Popup-only compatibility APIs still default to `/auth/tcm/popup-callback`.
 - Default browser scope is `profile email`.
 - Route-backed browser exchange defaults to `/api/auth/tcm/oauth-exchange`.
 - Recommended interaction mode is `auto`.
+
+### Popup URL Behavior
+
+- `buildAuthorizeUrl()` always emits the OAuth protocol params and PKCE fields.
+- In popup mode it adds `ui_mode=popup`.
+- For Google it adds `required_provider=google`.
+- It does not emit `provider`, `auto_start_provider`, or `popup_variant`.
+- In the standard TCM web popup implementation, unauthenticated Google popup login is handled by same-window redirect inside the already-open popup, not by opening a second GIS popup.
 
 ## Root Exports
 

@@ -27,6 +27,7 @@ export interface CreateTcmOAuthClientOptions {
   tcmWebUrl: string;
   callbackPath?: string;
   scope?: string;
+  fetch?: typeof fetch;
   popup?: {
     width?: number;
     height?: number;
@@ -34,7 +35,7 @@ export interface CreateTcmOAuthClientOptions {
 }
 
 export interface TcmOAuthPopupLoginParams {
-  provider: TcmProvider;
+  provider?: TcmProvider;
 }
 
 export interface TcmOAuthClient {

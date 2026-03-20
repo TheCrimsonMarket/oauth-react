@@ -20,17 +20,12 @@ export function buildAuthorizeUrl(options: BuildAuthorizeUrlOptions): string {
   url.searchParams.set('state', options.state);
   url.searchParams.set('code_challenge', options.codeChallenge);
   url.searchParams.set('code_challenge_method', 'S256');
-  url.searchParams.set('provider', options.provider);
   if ((options.interactionMode ?? 'popup') === 'popup') {
     url.searchParams.set('ui_mode', 'popup');
   }
 
   if (options.provider === 'google') {
     url.searchParams.set('required_provider', 'google');
-    url.searchParams.set('auto_start_provider', 'google');
-    if ((options.interactionMode ?? 'popup') === 'popup') {
-      url.searchParams.set('popup_variant', 'spinner');
-    }
   }
 
   return url.toString();

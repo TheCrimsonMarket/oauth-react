@@ -51,6 +51,7 @@ export interface UseTcmOAuthPopupOptions<TExchangeResult = unknown> {
   tcmWebUrl: string;
   callbackPath?: string;
   scope?: string;
+  fetch?: typeof fetch;
   exchangeCode: (payload: TcmAuthCodePayload) => Promise<TExchangeResult>;
   popup?: { width?: number; height?: number };
   onSuccess?: (result: TExchangeResult) => void | Promise<void>;
@@ -61,7 +62,7 @@ export interface UseTcmOAuthPopupReturn<TExchangeResult = unknown> {
   authenticating: boolean;
   phase: TcmOAuthPhase;
   error: TcmOAuthError | null;
-  startLogin: (provider: TcmProvider) => Promise<void>;
+  startLogin: (provider?: TcmProvider) => Promise<void>;
   clearError: () => void;
 }
 
@@ -84,7 +85,7 @@ export interface UseTcmOAuthPopupRouteReturn<TExchangeResult = unknown> {
   authenticating: boolean;
   phase: TcmOAuthPhase;
   error: TcmOAuthError | null;
-  startLogin: (provider: TcmProvider) => Promise<void>;
+  startLogin: (provider?: TcmProvider) => Promise<void>;
   clearError: () => void;
 }
 
@@ -109,7 +110,7 @@ export interface UseTcmOAuthReturn<TExchangeResult = unknown> {
   phase: TcmOAuthPhase;
   error: TcmOAuthError | null;
   resolvedInteractionMode: TcmResolvedOAuthInteractionMode | null;
-  startLogin: (provider: TcmProvider) => Promise<void>;
+  startLogin: (provider?: TcmProvider) => Promise<void>;
   clearError: () => void;
 }
 

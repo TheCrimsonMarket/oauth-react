@@ -72,7 +72,7 @@ export function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
   }, [options.onError]);
 
   const startLogin = useCallback(
-    async (provider: TcmProvider) => {
+    async (provider?: TcmProvider) => {
       let exchangeResult;
       let flowId: string | null = null;
 
