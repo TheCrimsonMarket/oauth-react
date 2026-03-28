@@ -16,7 +16,9 @@ const outputs = [
   },
   {
     file: 'nextjs.d.ts',
-    content: `export * from './nextjs';
+    content: `export { createTcmOAuthExchangeRoute } from './nextjs/createTcmOAuthExchangeRoute';
+export { createTcmLogoutRoute } from './nextjs/createTcmLogoutRoute';
+export type { CreateTcmOAuthExchangeRouteOptions, CreateTcmLogoutRouteOptions } from './server/types';
 `,
   },
 ];
