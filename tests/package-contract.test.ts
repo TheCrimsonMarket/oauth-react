@@ -16,13 +16,13 @@ describe('package exports contract', () => {
     expect(rootExport.require).toBe('./dist/index.cjs');
     expect(rootExport.types).toBe('./dist/index.d.ts');
 
-    expect(clientExport.import).toBe('./dist/client.js');
-    expect(clientExport.require).toBe('./dist/client.cjs');
-    expect(clientExport.types).toBe('./dist/client.d.ts');
+    expect(clientExport.import).toBe('./dist/client/index.js');
+    expect(clientExport.require).toBe('./dist/client/index.cjs');
+    expect(clientExport.types).toBe('./dist/client/index.d.ts');
 
-    expect(callbackExport.import).toBe('./dist/callback.js');
-    expect(callbackExport.require).toBe('./dist/callback.cjs');
-    expect(callbackExport.types).toBe('./dist/callback.d.ts');
+    expect(callbackExport.import).toBe('./dist/client/callback.js');
+    expect(callbackExport.require).toBe('./dist/client/callback.cjs');
+    expect(callbackExport.types).toBe('./dist/client/callback.d.ts');
 
     expect(serverExport.import).toBe('./dist/server.js');
     expect(serverExport.require).toBe('./dist/server.cjs');

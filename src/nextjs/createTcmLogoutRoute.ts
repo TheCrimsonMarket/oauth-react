@@ -1,14 +1,4 @@
-import type { TcmCookieSessionAdapter } from '../server/session';
-
-export interface CreateTcmLogoutRouteOptions<TSession extends Record<string, unknown>> {
-  resolveSession: (request: Request) => Promise<(TSession & { authSource: string }) | null> | (TSession & { authSource: string }) | null;
-  standaloneSessionAdapter: TcmCookieSessionAdapter;
-  standaloneAuthSources?: string[];
-  onSharedCookieLogout?: (context: {
-    request: Request;
-    session: TSession & { authSource: string };
-  }) => Promise<Response | null | void> | Response | null | void;
-}
+import type { CreateTcmLogoutRouteOptions } from '../server/types';
 
 function buildJsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {

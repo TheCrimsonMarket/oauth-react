@@ -18,8 +18,8 @@ export default defineConfig({
     lib: {
       entry: {
         index: resolve(__dirname, 'src/index.ts'),
-        client: resolve(__dirname, 'src/client/index.ts'),
-        callback: resolve(__dirname, 'src/client-callback.ts'),
+        'client/index': resolve(__dirname, 'src/client/index.ts'),
+        'client/callback': resolve(__dirname, 'src/client/callback.ts'),
         server: resolve(__dirname, 'src/server.ts'),
         nextjs: resolve(__dirname, 'src/nextjs.ts'),
         styles: resolve(__dirname, 'src/styles-entry.ts'),
