@@ -55,7 +55,7 @@ const route = createTcmOAuthExchangeRoute({
     clientSecret: process.env.TCM_OAUTH_CLIENT_SECRET!,
     callbackPath: "/auth/tcm/callback",
     redirectUri: process.env.TCM_OAUTH_REDIRECT_URI,
-    expectedProvider: "google",
+    googleOnly: true,
   },
   async onResolvedUser({ userInfo, traceId }) {
     if (!userInfo.googleId) {
@@ -158,10 +158,11 @@ export function LoginButton() {
     exchangeEndpoint: "/api/auth/tcm/oauth-exchange",
     callbackPath: "/auth/tcm/callback",
     interactionMode: "auto",
+    googleOnly: true,
   });
 
   return (
-    <button onClick={() => void oauth.startLogin("google")} disabled={oauth.authenticating}>
+    <button onClick={() => void oauth.startLogin()} disabled={oauth.authenticating}>
       {oauth.authenticating ? "Signing in..." : "Continue with Google"}
     </button>
   );
@@ -180,7 +181,7 @@ This keeps the app integration simple while making mobile web and privacy-restri
 
 ## Popup Contract
 
-For Google popup flows, the SDK now standardizes the authorize URL down to:
+For Google-only popup flows, the SDK now standardizes the authorize URL down to:
 - OAuth protocol params
 - `ui_mode=popup`
 - `required_provider=google`

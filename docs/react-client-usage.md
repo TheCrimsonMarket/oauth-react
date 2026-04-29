@@ -7,7 +7,7 @@ Use `useTcmOAuth` when your app already has a server route for exchange and you 
 ```tsx
 import { useTcmOAuth } from "@crimsoncorp/oauth-react";
 
-export function GoogleLogin() {
+export function LoginActions() {
   const oauth = useTcmOAuth<{ userId: string }>({
     clientId: process.env.NEXT_PUBLIC_TCM_OAUTH_CLIENT_ID!,
     tcmWebUrl: process.env.NEXT_PUBLIC_TCM_OAUTH_WEB_URL!,
@@ -24,12 +24,19 @@ export function GoogleLogin() {
   });
 
   return (
-    <button onClick={() => void oauth.startLogin("google")} disabled={oauth.authenticating}>
-      {oauth.authenticating ? "Please wait..." : "Sign in with Google"}
-    </button>
+    <>
+      <button onClick={() => void oauth.startLogin()} disabled={oauth.authenticating}>
+        {oauth.authenticating ? "Please wait..." : "Open provider chooser"}
+      </button>
+      <button onClick={() => void oauth.startLogin("discord")} disabled={oauth.authenticating}>
+        Continue with Discord
+      </button>
+    </>
   );
 }
 ```
+
+If the app should always start Google immediately, set `googleOnly: true` and call `startLogin()` without a provider argument.
 
 ## Return Shape
 

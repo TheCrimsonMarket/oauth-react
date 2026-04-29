@@ -283,6 +283,68 @@ describe('createTcmOAuthClient', () => {
     expect(finishPopupFlow).toHaveBeenCalledWith('flow-1');
   });
 
+  it('supports chooser-mode login without pre-resolving a provider', async () => {
+    tryAcquireFlowStartSlot.mockReturnValue({
+      acquired: true,
+      focusedExistingPopup: false,
+    });
+    createPkcePair.mockResolvedValue({
+      codeVerifier: 'verifier-1',
+      codeChallenge: 'challenge-1',
+    });
+    createState.mockReturnValue('state-1');
+    buildAuthorizeUrl.mockReturnValue('https://www.thecrimsonmarket.com/oauth/authorize?x=1');
+    openPopup.mockReturnValue({
+      closed: false,
+      focus: vi.fn(),
+      location: { href: '' },
+    });
+    claimFlowTransaction.mockReturnValue(true);
+    consumeTransaction.mockReturnValue({
+      state: 'state-1',
+      codeVerifier: 'verifier-1',
+      redirectUri: 'http://localhost:3693/auth/tcm/popup-callback',
+      expiresAt: Date.now() + 60_000,
+    });
+
+    let onPopupResult: ((result: unknown) => Promise<void>) | null = null;
+    activatePopupFlow.mockImplementation((options: { onPopupResult: (result: unknown) => Promise<void> }) => {
+      onPopupResult = options.onPopupResult;
+      return 'flow-1';
+    });
+
+    const client = createTcmOAuthClient({
+      clientId: 'client-1',
+      tcmWebUrl: 'https://www.thecrimsonmarket.com',
+      scope: 'profile email',
+    });
+
+    const login = client.loginWithPopup({});
+
+    await flushAsyncWork();
+
+    expect(resolveTcmOAuthProvider).not.toHaveBeenCalled();
+    expect(setPreparingFlow).toHaveBeenCalledWith(expect.any(String), null);
+    expect(buildAuthorizeUrl).toHaveBeenCalledWith(expect.objectContaining({
+      provider: undefined,
+      googleOnly: undefined,
+    }));
+
+    if (!onPopupResult) {
+      throw new Error('Expected onPopupResult handler to be set');
+    }
+    const onPopupResultHandler = onPopupResult as (result: unknown) => Promise<void>;
+    await onPopupResultHandler({
+      type: 'tcm_oauth_result',
+      ok: true,
+      code: 'auth-code-1',
+      state: 'state-1',
+    });
+
+    const payload = await login;
+    expect(payload.provider).toBeUndefined();
+  });
+
   it('returns the same snapshot reference when flow state has not changed', () => {
     const stableSnapshot = {
       phase: 'idle',

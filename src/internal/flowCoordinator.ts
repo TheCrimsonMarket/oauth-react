@@ -319,7 +319,7 @@ export function focusActivePopup(): boolean {
 export interface ActivatePopupFlowOptions {
   popup: Window;
   expectedOrigin: string;
-  provider: TcmProvider;
+  provider?: TcmProvider | null;
   ownerInstanceId: string;
   onPopupResult: (result: PopupResult) => void | Promise<void>;
   onPopupClosed: () => void;
@@ -374,7 +374,7 @@ export function activatePopupFlow(options: ActivatePopupFlowOptions): string {
     phase: 'interactive_provider',
     error: null,
     activeFlowId: flowId,
-    activeProvider: provider,
+    activeProvider: provider ?? null,
     ownerInstanceId,
     exchangeStarted: false,
     terminal: false,
@@ -428,13 +428,13 @@ export function getFlowSnapshot(): FlowSnapshot {
   return getState().snapshot;
 }
 
-export function setPreparingFlow(ownerInstanceId: string, provider: TcmProvider): void {
+export function setPreparingFlow(ownerInstanceId: string, provider?: TcmProvider | null): void {
   const state = getState();
   publishSnapshot(state, {
     phase: 'preparing',
     error: null,
     activeFlowId: null,
-    activeProvider: provider,
+    activeProvider: provider ?? null,
     ownerInstanceId,
     terminal: false,
     exchangeStarted: false,

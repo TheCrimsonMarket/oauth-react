@@ -1,6 +1,7 @@
 export { useTcmOAuth } from './hooks/useTcmOAuth';
 export { useTcmOAuthPopup } from './hooks/useTcmOAuthPopup';
 export { useTcmOAuthPopupRoute } from './hooks/useTcmOAuthPopupRoute';
+export { useTcmOAuthClientPolicy } from './hooks/useTcmOAuthClientPolicy';
 export { TcmOAuthButton } from './components/TcmOAuthButton';
 export { TcmOAuthPanel } from './components/TcmOAuthPanel';
 export { TcmOAuthCallbackPage } from './components/TcmOAuthCallbackPage';
@@ -16,6 +17,7 @@ export type {
   TcmOAuthError,
   TcmAuthCodePayload,
   TcmOAuthDiagnosticsMode,
+  TcmOAuthClientPolicy,
   UseTcmOAuthOptions,
   UseTcmOAuthReturn,
   UseTcmOAuthPopupOptions,
@@ -24,3 +26,7 @@ export type {
   UseTcmOAuthPopupRouteReturn,
   PopupResult,
 } from './types';
+export type {
+  UseTcmOAuthClientPolicyOptions,
+  UseTcmOAuthClientPolicyResult,
+} from './hooks/useTcmOAuthClientPolicy';

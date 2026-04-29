@@ -27,6 +27,7 @@ export interface CreateTcmOAuthClientOptions {
   tcmWebUrl: string;
   callbackPath?: string;
   scope?: string;
+  googleOnly?: boolean;
   fetch?: typeof fetch;
   popup?: {
     width?: number;

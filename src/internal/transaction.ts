@@ -6,7 +6,7 @@ export interface TcmPopupTransaction {
   state: string;
   codeVerifier: string;
   redirectUri: string;
-  provider: TcmProvider;
+  provider?: TcmProvider;
   createdAt: number;
   expiresAt: number;
   tcmWebUrl: string;

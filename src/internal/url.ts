@@ -7,7 +7,8 @@ interface BuildAuthorizeUrlOptions {
   scope: string;
   state: string;
   codeChallenge: string;
-  provider: TcmProvider;
+  provider?: TcmProvider;
+  googleOnly?: boolean;
   interactionMode?: TcmResolvedOAuthInteractionMode;
 }
 
@@ -24,7 +25,7 @@ export function buildAuthorizeUrl(options: BuildAuthorizeUrlOptions): string {
     url.searchParams.set('ui_mode', 'popup');
   }
 
-  if (options.provider === 'google') {
+  if (options.googleOnly) {
     url.searchParams.set('required_provider', 'google');
   }
 

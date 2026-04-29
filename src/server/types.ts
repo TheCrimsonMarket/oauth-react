@@ -53,12 +53,13 @@ export interface ExchangeTcmAuthorizationCodeResult {
 
 export interface ExchangeTcmPopupCodeOptions extends ExchangeTcmAuthorizationCodeOptions {
   expectedProvider?: TcmProvider;
+  googleOnly?: boolean;
 }
 
 export interface TcmOAuthExchangeResult {
   tokenSet: TcmOAuthTokenSet;
   userInfo: TcmOAuthUserInfo;
-  provider: TcmProvider;
+  provider?: TcmProvider;
   redirectUri: string;
   traceId: string;
 }
@@ -86,6 +87,7 @@ export function isTcmOAuthServerError(error: unknown): error is TcmOAuthServerEr
 export interface CreateTcmOAuthExchangeRouteOptions<TSession = unknown, TBody = unknown> {
   oauth: TcmOAuthServerOptions & {
     expectedProvider?: TcmProvider;
+    googleOnly?: boolean;
   };
   diagnostics?: 'auto' | 'always' | 'never';
   onResolvedUser: (context: {
@@ -95,7 +97,7 @@ export interface CreateTcmOAuthExchangeRouteOptions<TSession = unknown, TBody = 
     traceId: string;
     correlation: TcmOAuthCorrelationContext;
     redirectUri: string;
-    provider: TcmProvider;
+    provider?: TcmProvider;
     payload: TcmAuthCodePayload;
   }) => Promise<{
     body: TBody;

@@ -98,7 +98,7 @@ export function createTcmOAuthExchangeRoute<TSession = unknown, TBody = unknown>
           state: payload.state || '',
           codeVerifier: payload.codeVerifier || '',
           redirectUri: payload.redirectUri || '',
-          provider: payload.provider || 'google',
+          provider: payload.provider,
           _tcmFlowId: payload._tcmFlowId,
           _tcmMessageId: payload._tcmMessageId,
         };

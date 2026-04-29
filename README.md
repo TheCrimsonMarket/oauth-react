@@ -91,15 +91,36 @@ export function LoginButton() {
   });
 
   return (
-    <button
-      type="button"
-      disabled={oauth.authenticating}
-      onClick={() => void oauth.startLogin("google")}
-    >
-      {oauth.authenticating ? "Connecting..." : "Continue with Google"}
-    </button>
+    <>
+      <button
+        type="button"
+        disabled={oauth.authenticating}
+        onClick={() => void oauth.startLogin()}
+      >
+        {oauth.authenticating ? "Connecting..." : "Continue to provider chooser"}
+      </button>
+      <button
+        type="button"
+        disabled={oauth.authenticating}
+        onClick={() => void oauth.startLogin("discord")}
+      >
+        Continue with Discord
+      </button>
+    </>
   );
 }
+```
+
+Use `googleOnly: true` when the app should skip the provider chooser and immediately start the Google flow:
+
+```tsx
+const oauth = useTcmOAuth({
+  clientId,
+  tcmWebUrl,
+  googleOnly: true,
+});
+
+<button onClick={() => void oauth.startLogin()}>Continue with Google</button>
 ```
 
 ### 2. Callback page
@@ -136,7 +157,7 @@ const route = createTcmOAuthExchangeRoute({
     clientId: process.env.TCM_OAUTH_CLIENT_ID!,
     clientSecret: process.env.TCM_OAUTH_CLIENT_SECRET!,
     callbackPath: "/auth/tcm/callback",
-    expectedProvider: "google",
+    googleOnly: true,
   },
   async onResolvedUser({ userInfo, traceId }) {
     if (!userInfo.googleId) {

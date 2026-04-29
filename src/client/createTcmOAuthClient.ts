@@ -62,6 +62,22 @@ function getSharedClientState(): SharedClientState {
   return clientWindow.__tcmOauthClientState;
 }
 
+function resolveRequestedProvider(requestedProvider: TcmProvider | undefined, googleOnly: boolean | undefined): TcmProvider | undefined {
+  if (!googleOnly) {
+    return requestedProvider;
+  }
+
+  if (!requestedProvider) {
+    return 'google';
+  }
+
+  if (requestedProvider !== 'google') {
+    throw createError('config_error', 'googleOnly mode only supports the Google provider.', requestedProvider);
+  }
+
+  return requestedProvider;
+}
+
 export function resetTcmOAuthBrowserStateInternal(): void {
   if (typeof window === 'undefined') {
     return;
@@ -139,7 +155,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
   const ownerInstanceId = createInstanceId();
 
   async function loginWithPopup(params: TcmOAuthPopupLoginParams): Promise<TcmAuthCodePayload> {
-    const requestedProvider = params.provider;
+    const requestedProvider = resolveRequestedProvider(params.provider, options.googleOnly);
     const sharedState = getSharedClientState();
 
     const runtimeError = validateRuntime(options);
@@ -157,20 +173,22 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
       throw error;
     }
 
-    const effectiveProvider = await resolveTcmOAuthProvider({
-      clientId: options.clientId,
-      tcmWebUrl: options.tcmWebUrl,
-      requestedProvider,
-      fetchImpl: options.fetch,
-    });
-    const effectiveScope = await resolveTcmOAuthScope({
-      clientId: options.clientId,
-      tcmWebUrl: options.tcmWebUrl,
-      requestedScope: options.scope,
-      fetchImpl: options.fetch,
-    });
+      const effectiveScope = await resolveTcmOAuthScope({
+        clientId: options.clientId,
+        tcmWebUrl: options.tcmWebUrl,
+        requestedScope: options.scope,
+        fetchImpl: options.fetch,
+      });
+      const effectiveProvider = requestedProvider
+        ? await resolveTcmOAuthProvider({
+            clientId: options.clientId,
+            tcmWebUrl: options.tcmWebUrl,
+            requestedProvider,
+            fetchImpl: options.fetch,
+          })
+        : undefined;
 
-    const slot = tryAcquireFlowStartSlot();
+      const slot = tryAcquireFlowStartSlot();
     if (!slot.acquired) {
       if (!slot.focusedExistingPopup) {
         focusActivePopup();
@@ -181,7 +199,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
       throw createError('unknown_error', IN_PROGRESS_MSG, effectiveProvider);
     }
 
-    setPreparingFlow(ownerInstanceId, effectiveProvider);
+    setPreparingFlow(ownerInstanceId, effectiveProvider ?? null);
 
     const loginPromise = new Promise<TcmAuthCodePayload>((resolve, reject) => {
       let flowId: string | null = null;
@@ -243,6 +261,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
             state,
             codeChallenge,
             provider: effectiveProvider,
+            googleOnly: options.googleOnly,
             interactionMode: 'popup',
           });
 

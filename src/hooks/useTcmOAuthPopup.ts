@@ -35,10 +35,11 @@ export function useTcmOAuthPopup<TExchangeResult = unknown>(
       tcmWebUrl: options.tcmWebUrl,
       callbackPath: options.callbackPath,
       scope: options.scope,
+      googleOnly: options.googleOnly,
       fetch: options.fetch,
       popup: options.popup,
     }),
-    [options.callbackPath, options.clientId, options.fetch, popupHeight, popupWidth, options.scope, options.tcmWebUrl],
+    [options.callbackPath, options.clientId, options.fetch, options.googleOnly, popupHeight, popupWidth, options.scope, options.tcmWebUrl],
   );
 
   const snapshot = useSyncExternalStore(client.subscribe, client.getSnapshot, client.getSnapshot);

@@ -41,7 +41,7 @@ export interface TcmAuthCodePayload {
   state: string;
   codeVerifier: string;
   redirectUri: string;
-  provider: TcmProvider;
+  provider?: TcmProvider;
   _tcmFlowId?: string;
   _tcmMessageId?: string;
 }
@@ -51,6 +51,7 @@ export interface UseTcmOAuthPopupOptions<TExchangeResult = unknown> {
   tcmWebUrl: string;
   callbackPath?: string;
   scope?: string;
+  googleOnly?: boolean;
   fetch?: typeof fetch;
   exchangeCode: (payload: TcmAuthCodePayload) => Promise<TExchangeResult>;
   popup?: { width?: number; height?: number };
@@ -68,12 +69,25 @@ export interface UseTcmOAuthPopupReturn<TExchangeResult = unknown> {
 
 export type TcmOAuthDiagnosticsMode = 'auto' | 'always' | 'never';
 
+export interface TcmOAuthClientPolicy {
+  clientId?: string;
+  allowedScopes: string[];
+  allowedProviders: TcmProvider[];
+  pkcePolicy?: string;
+  verified?: boolean;
+  name?: string;
+  description?: string;
+  logoUrl?: string;
+  website?: string;
+}
+
 export interface UseTcmOAuthPopupRouteOptions<TExchangeResult = unknown> {
   clientId: string;
   tcmWebUrl: string;
   exchangeEndpoint?: string;
   callbackPath?: string;
   scope?: string;
+  googleOnly?: boolean;
   popup?: { width?: number; height?: number };
   diagnostics?: TcmOAuthDiagnosticsMode;
   fetch?: typeof fetch;
@@ -95,6 +109,7 @@ export interface UseTcmOAuthOptions<TExchangeResult = unknown> {
   exchangeEndpoint?: string;
   callbackPath?: string;
   scope?: string;
+  googleOnly?: boolean;
   popup?: { width?: number; height?: number };
   diagnostics?: TcmOAuthDiagnosticsMode;
   fetch?: typeof fetch;

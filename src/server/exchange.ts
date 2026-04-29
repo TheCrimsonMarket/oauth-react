@@ -214,9 +214,11 @@ export async function exchangeTcmPopupCode(
   payload: TcmAuthCodePayload,
   options: ExchangeTcmPopupCodeOptions,
 ): Promise<TcmOAuthExchangeResult> {
-  if (options.expectedProvider && payload.provider !== options.expectedProvider) {
+  const expectedProvider = options.googleOnly ? 'google' : options.expectedProvider;
+
+  if (expectedProvider && payload.provider && payload.provider !== expectedProvider) {
     throw new TcmOAuthServerError(
-      `Unsupported provider for this endpoint. Expected provider=${options.expectedProvider}.`,
+      `Unsupported provider for this endpoint. Expected provider=${expectedProvider}.`,
       400,
       { code: 'config_error', traceId: options.traceId },
     );

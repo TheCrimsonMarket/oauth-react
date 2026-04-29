@@ -11,7 +11,7 @@ interface RedirectTransaction {
   state: string;
   codeVerifier: string;
   redirectUri: string;
-  provider: TcmProvider;
+  provider?: TcmProvider;
   createdAt: number;
   expiresAt: number;
   tcmWebUrl: string;
@@ -89,7 +89,8 @@ export async function startRedirectLogin(options: {
   tcmWebUrl: string;
   callbackPath: string;
   scope: string;
-  provider: TcmProvider;
+  provider?: TcmProvider;
+  googleOnly?: boolean;
   returnTo?: string;
 }): Promise<never> {
   if (!window.crypto?.subtle || !window.sessionStorage || typeof window.location?.assign !== 'function') {
@@ -124,6 +125,7 @@ export async function startRedirectLogin(options: {
     state,
     codeChallenge,
     provider: options.provider,
+    googleOnly: options.googleOnly,
     interactionMode: 'redirect',
   });
 

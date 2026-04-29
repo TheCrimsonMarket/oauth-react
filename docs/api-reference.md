@@ -50,7 +50,7 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
 
 - `buildAuthorizeUrl()` always emits the OAuth protocol params and PKCE fields.
 - In popup mode it adds `ui_mode=popup`.
-- For Google it adds `required_provider=google`.
+- When `googleOnly` is enabled it adds `required_provider=google`.
 - It does not emit `provider`, `auto_start_provider`, or `popup_variant`.
 - In the standard TCM web popup implementation, unauthenticated Google popup login is handled by same-window redirect inside the already-open popup, not by opening a second GIS popup.
 
@@ -64,6 +64,8 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
   - Recommended route-backed React hook with automatic popup vs redirect selection.
 - Key options:
   - all route-backed popup options, plus:
+  - `googleOnly?: boolean`
+    - when `true`, `startLogin()` defaults to Google and the authorize URL enforces Google-only mode
   - `interactionMode?: "auto" | "popup" | "redirect"`
     - default: `auto`
   - `fallbackToRedirect?: boolean`
@@ -95,6 +97,7 @@ function useTcmOAuthPopup<TExchangeResult = unknown>(
     - default: `/auth/tcm/popup-callback`
   - `scope?: string`
     - default: `profile email`
+  - `googleOnly?: boolean`
   - `exchangeCode(payload)`
     - required app-defined code exchange function
   - `popup?: { width?: number; height?: number }`
@@ -133,6 +136,7 @@ function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
     - default: `/auth/tcm/popup-callback`
   - `scope?: string`
     - default: `profile email`
+  - `googleOnly?: boolean`
   - `popup?: { width?: number; height?: number }`
     - default size: `500 x 650`
   - `diagnostics?: "auto" | "always" | "never"`
@@ -172,6 +176,8 @@ function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
 - Runtime props:
   - `providers?: TcmProvider[]`
     - default: all known providers
+  - `googleOnly?: boolean`
+    - when `true`, renders only the Google button
   - `loading?: boolean`
     - default: `false`
   - `onProviderClick(provider): void`
@@ -265,7 +271,7 @@ function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
   - `state: string`
   - `codeVerifier: string`
   - `redirectUri: string`
-  - `provider: TcmProvider`
+  - `provider?: TcmProvider`
   - `_tcmFlowId?: string`
   - `_tcmMessageId?: string`
 
@@ -365,6 +371,7 @@ function createTcmLogoutRoute<TSession extends Record<string, unknown>>(
   - `tcmWebUrl`
   - `callbackPath?`
   - `scope?`
+  - `googleOnly?`
   - `exchangeCode(payload)`
   - `popup?`
   - `onSuccess?`
@@ -387,6 +394,7 @@ function createTcmLogoutRoute<TSession extends Record<string, unknown>>(
   - `exchangeEndpoint?`
   - `callbackPath?`
   - `scope?`
+  - `googleOnly?`
   - `popup?`
   - `diagnostics?`
   - `fetch?`
@@ -410,6 +418,7 @@ function createTcmLogoutRoute<TSession extends Record<string, unknown>>(
   - `exchangeEndpoint?`
   - `callbackPath?`
   - `scope?`
+  - `googleOnly?`
   - `popup?`
   - `diagnostics?`
   - `fetch?`
@@ -530,6 +539,7 @@ function createTcmOAuthPopupRouteClient<TExchangeResult = unknown>(
   - `tcmWebUrl: string`
   - `callbackPath?: string`
   - `scope?: string`
+  - `googleOnly?: boolean`
   - `popup?: { width?: number; height?: number }`
 
 ### `CreateTcmOAuthPopupRouteClientOptions<TExchangeResult>`
@@ -575,7 +585,7 @@ function createTcmOAuthPopupRouteClient<TExchangeResult = unknown>(
 ### `TcmOAuthPopupLoginParams`
 
 - Fields:
-  - `provider: TcmProvider`
+  - `provider?: TcmProvider`
 
 ### `TcmOAuthClient`
 
@@ -778,6 +788,7 @@ function isTcmOAuthServerError(error: unknown): error is TcmOAuthServerError;
   - `ExchangeTcmAuthorizationCodeOptions`
 - Adds:
   - `expectedProvider?: TcmProvider`
+  - `googleOnly?: boolean`
 
 ### `TcmOAuthTokenSet`
 
@@ -814,7 +825,7 @@ function isTcmOAuthServerError(error: unknown): error is TcmOAuthServerError;
 - Fields:
   - `tokenSet: TcmOAuthTokenSet`
   - `userInfo: TcmOAuthUserInfo`
-  - `provider: TcmProvider`
+  - `provider?: TcmProvider`
   - `redirectUri: string`
   - `traceId: string`
 
@@ -857,6 +868,7 @@ function createTcmOAuthExchangeRoute<TSession = unknown, TBody = unknown>(
     - `redirectUri?`
     - `fetch?`
     - `expectedProvider?`
+    - `googleOnly?`
   - `diagnostics?: "auto" | "always" | "never"`
   - `onResolvedUser(context)`
     - returns `{ body, session?, status?, headers? }`
@@ -871,7 +883,7 @@ function createTcmOAuthExchangeRoute<TSession = unknown, TBody = unknown>(
   - `traceId: string`
   - `correlation: TcmOAuthCorrelationContext`
   - `redirectUri: string`
-  - `provider: TcmProvider`
+  - `provider?: TcmProvider`
   - `payload: TcmAuthCodePayload`
 
 ## Error Codes and Failure Semantics

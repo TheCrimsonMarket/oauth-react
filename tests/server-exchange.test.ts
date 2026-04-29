@@ -94,6 +94,46 @@ describe('server exchange helpers', () => {
     expect(result.tokenSet.accessToken).toBe('access-1');
   });
 
+  it('accepts chooser-mode exchange payloads without a provider value', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({
+          access_token: 'access-1',
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({
+          sub: 'user-1',
+          email: 'user@example.com',
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+    const result = await exchangeTcmPopupCode(
+      {
+        code: 'code-1',
+        state: 'state-1',
+        codeVerifier: 'verifier-1',
+        redirectUri: 'https://partner.example.com/auth/tcm/popup-callback',
+      },
+      {
+        apiBaseUrl: 'https://api.thecrimsonmarket.com',
+        clientId: 'client-1',
+        clientSecret: 'secret-1',
+        fetch: fetchMock,
+      },
+    );
+
+    expect(result.provider).toBeUndefined();
+    expect(result.userInfo.email).toBe('user@example.com');
+  });
+
   it('fetches userinfo directly', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ sub: 'user-1', userName: 'alice' }), {

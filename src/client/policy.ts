@@ -1,17 +1,5 @@
 import { createError } from '../internal/errors';
-import type { TcmProvider } from '../types';
-
-export interface TcmOAuthClientPolicy {
-  clientId?: string;
-  allowedScopes: string[];
-  allowedProviders: TcmProvider[];
-  pkcePolicy?: string;
-  verified?: boolean;
-  name?: string;
-  description?: string;
-  logoUrl?: string;
-  website?: string;
-}
+import type { TcmOAuthClientPolicy, TcmProvider } from '../types';
 
 const policyRequestCache = new Map<string, Promise<TcmOAuthClientPolicy>>();
 

@@ -5,7 +5,7 @@ import { setFlowDone, setFlowError } from '../internal/flowCoordinator';
 import { resolveTcmOAuthProvider, resolveTcmOAuthScope } from './policy';
 import { resolveInteractionMode } from '../internal/interaction';
 import { hasPendingRedirectResult, resumeRedirectPayloadIfPresent, startRedirectLogin } from '../internal/redirect';
-import type { TcmAuthCodePayload, TcmOAuthError } from '../types';
+import type { TcmAuthCodePayload, TcmOAuthError, TcmProvider } from '../types';
 import type {
   CreateTcmOAuthRouteClientOptions,
   TcmOAuthPopupLoginParams,
@@ -14,6 +14,26 @@ import type {
 
 const DEFAULT_CALLBACK_PATH = '/auth/tcm/callback';
 const DEFAULT_EXCHANGE_ENDPOINT = '/api/auth/tcm/oauth-exchange';
+
+function resolveRequestedProvider(
+  requestedProvider: TcmProvider | undefined,
+  googleOnly: boolean | undefined,
+): TcmProvider | undefined {
+  if (!googleOnly) {
+    return requestedProvider;
+  }
+
+  if (!requestedProvider) {
+    return 'google';
+  }
+
+  if (requestedProvider !== 'google') {
+    throw createError('config_error', 'googleOnly mode only supports the Google provider.', requestedProvider);
+  }
+
+  return requestedProvider;
+}
+
 export function createTcmOAuthRouteClient<TExchangeResult = unknown>(
   options: CreateTcmOAuthRouteClientOptions<TExchangeResult>,
 ): TcmOAuthRouteClient<TExchangeResult> {
@@ -52,25 +72,28 @@ export function createTcmOAuthRouteClient<TExchangeResult = unknown>(
     resolveInteractionMode: resolveMode,
     hasPendingRedirectResult,
     async loginWithRoute(params: TcmOAuthPopupLoginParams) {
+      const requestedProvider = resolveRequestedProvider(params.provider, options.googleOnly);
       const mode = resolveMode();
       if (mode === 'popup') {
         try {
-          return await popupClient.loginWithPopupRoute(params);
+          return await popupClient.loginWithPopupRoute({ provider: requestedProvider });
         } catch (error) {
           const errorCode = error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
           if (errorCode === 'popup_blocked' && options.fallbackToRedirect !== false) {
-            const effectiveProvider = await resolveTcmOAuthProvider({
-              clientId: options.clientId,
-              tcmWebUrl: options.tcmWebUrl,
-              requestedProvider: params.provider,
-              fetchImpl: options.fetch,
-            });
             const effectiveScope = await resolveTcmOAuthScope({
               clientId: options.clientId,
               tcmWebUrl: options.tcmWebUrl,
               requestedScope: options.scope,
               fetchImpl: options.fetch,
             });
+            const effectiveProvider = requestedProvider
+              ? await resolveTcmOAuthProvider({
+                  clientId: options.clientId,
+                  tcmWebUrl: options.tcmWebUrl,
+                  requestedProvider,
+                  fetchImpl: options.fetch,
+                })
+              : undefined;
             await startRedirectLogin({
               clientId: options.clientId,
               tcmWebUrl: options.tcmWebUrl,
@@ -84,18 +107,20 @@ export function createTcmOAuthRouteClient<TExchangeResult = unknown>(
         }
       }
 
-      const effectiveProvider = await resolveTcmOAuthProvider({
-        clientId: options.clientId,
-        tcmWebUrl: options.tcmWebUrl,
-        requestedProvider: params.provider,
-        fetchImpl: options.fetch,
-      });
       const effectiveScope = await resolveTcmOAuthScope({
         clientId: options.clientId,
         tcmWebUrl: options.tcmWebUrl,
         requestedScope: options.scope,
         fetchImpl: options.fetch,
       });
+      const effectiveProvider = requestedProvider
+        ? await resolveTcmOAuthProvider({
+            clientId: options.clientId,
+            tcmWebUrl: options.tcmWebUrl,
+            requestedProvider,
+            fetchImpl: options.fetch,
+          })
+        : undefined;
 
       return startRedirectLogin({
         clientId: options.clientId,
@@ -103,6 +128,7 @@ export function createTcmOAuthRouteClient<TExchangeResult = unknown>(
         callbackPath: options.callbackPath ?? DEFAULT_CALLBACK_PATH,
         scope: effectiveScope,
         provider: effectiveProvider,
+        googleOnly: options.googleOnly,
         returnTo: options.returnTo,
       });
     },
