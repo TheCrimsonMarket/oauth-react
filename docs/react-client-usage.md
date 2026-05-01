@@ -9,11 +9,10 @@ import { useTcmOAuth } from "@crimsoncorp/oauth-react";
 
 export function LoginActions() {
   const oauth = useTcmOAuth<{ userId: string }>({
-    clientId: process.env.NEXT_PUBLIC_TCM_OAUTH_CLIENT_ID!,
+    clientId: process.env.NEXT_PUBLIC_TCM_CLIENT_ID!,
     tcmWebUrl: process.env.NEXT_PUBLIC_TCM_OAUTH_WEB_URL!,
     exchangeEndpoint: "/api/auth/tcm/oauth-exchange",
     callbackPath: "/auth/tcm/callback",
-    scope: "profile email",
     interactionMode: "auto",
     onSuccess: ({ userId }) => {
       console.log("Logged in", userId);
@@ -37,6 +36,12 @@ export function LoginActions() {
 ```
 
 If the app should always start Google immediately, set `googleOnly: true` and call `startLogin()` without a provider argument.
+
+## Scopes
+
+Omit `scope` when the OAuth client has one allowed scope in the Developers portal. The SDK will resolve that client policy before starting login.
+
+If the client is allowed to request multiple scope sets, pass an explicit value such as `scope: "profile email"` or the narrowest scope set your app needs. The requested scopes must already be allowed on the OAuth client, otherwise the OAuth server will reject the authorization request.
 
 ## Return Shape
 

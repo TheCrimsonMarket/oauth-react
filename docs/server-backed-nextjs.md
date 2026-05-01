@@ -11,12 +11,10 @@ This is the recommended integration path for `@crimsoncorp/oauth-react`.
 ## Environment
 
 ```env
-NEXT_PUBLIC_TCM_OAUTH_CLIENT_ID=tcm_xxx
-NEXT_PUBLIC_TCM_OAUTH_WEB_URL=https://www.thecrimsonmarket.com
-TCM_OAUTH_API_URL=https://api.thecrimsonmarket.com
-TCM_OAUTH_CLIENT_ID=tcm_xxx
+NEXT_PUBLIC_TCM_CLIENT_ID=tcm_xxx
 TCM_OAUTH_CLIENT_SECRET=your-secret
-TCM_OAUTH_REDIRECT_URI=https://your-app.example.com/auth/tcm/callback
+TCM_OAUTH_API_URL=https://thecrimsonmarket.com/mana
+NEXT_PUBLIC_TCM_OAUTH_WEB_URL=https://www.thecrimsonmarket.com
 ```
 
 ## 1. Callback Page
@@ -51,10 +49,9 @@ const sessionAdapter = createTcmCookieSessionAdapter({
 const route = createTcmOAuthExchangeRoute({
   oauth: {
     apiBaseUrl: process.env.TCM_OAUTH_API_URL!,
-    clientId: process.env.TCM_OAUTH_CLIENT_ID!,
+    clientId: process.env.NEXT_PUBLIC_TCM_CLIENT_ID!,
     clientSecret: process.env.TCM_OAUTH_CLIENT_SECRET!,
     callbackPath: "/auth/tcm/callback",
-    redirectUri: process.env.TCM_OAUTH_REDIRECT_URI,
     googleOnly: true,
   },
   async onResolvedUser({ userInfo, traceId }) {
@@ -153,7 +150,7 @@ import { useTcmOAuth } from "@crimsoncorp/oauth-react";
 
 export function LoginButton() {
   const oauth = useTcmOAuth<{ userId: string }>({
-    clientId: process.env.NEXT_PUBLIC_TCM_OAUTH_CLIENT_ID!,
+    clientId: process.env.NEXT_PUBLIC_TCM_CLIENT_ID!,
     tcmWebUrl: process.env.NEXT_PUBLIC_TCM_OAUTH_WEB_URL!,
     exchangeEndpoint: "/api/auth/tcm/oauth-exchange",
     callbackPath: "/auth/tcm/callback",
@@ -197,6 +194,7 @@ UI-specific popup params such as `provider`, `auto_start_provider`, and `popup_v
 - Keep the callback page same-origin with the opener.
 - Register the exact callback URL in the Developers UI.
 - Do not expose `TCM_OAUTH_CLIENT_SECRET` to the browser.
+- No separate server-only client ID is required; the server route can read `NEXT_PUBLIC_TCM_CLIENT_ID`.
 - Use `createTcmCookieSessionAdapter` so the SDK owns standalone session cookie naming and clearing.
 - Embedded shared-domain `authToken` remains host-owned and is not replaced by the SDK cookie adapter.
 - Popup-specific exports still exist for compatibility, but the neutral `useTcmOAuth` + `TcmOAuthCallbackPage` path is now the recommended production integration.

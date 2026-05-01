@@ -77,7 +77,7 @@ import { useTcmOAuth } from "@crimsoncorp/oauth-react";
 
 export function LoginButton() {
   const oauth = useTcmOAuth<{ userId: string }>({
-    clientId: process.env.NEXT_PUBLIC_TCM_OAUTH_CLIENT_ID!,
+    clientId: process.env.NEXT_PUBLIC_TCM_CLIENT_ID!,
     tcmWebUrl: process.env.NEXT_PUBLIC_TCM_OAUTH_WEB_URL!,
     callbackPath: "/auth/tcm/callback",
     exchangeEndpoint: "/api/auth/tcm/oauth-exchange",
@@ -154,7 +154,7 @@ import { createTcmOAuthExchangeRoute } from "@crimsoncorp/oauth-react/nextjs";
 const route = createTcmOAuthExchangeRoute({
   oauth: {
     apiBaseUrl: process.env.TCM_OAUTH_API_URL!,
-    clientId: process.env.TCM_OAUTH_CLIENT_ID!,
+    clientId: process.env.NEXT_PUBLIC_TCM_CLIENT_ID!,
     clientSecret: process.env.TCM_OAUTH_CLIENT_SECRET!,
     callbackPath: "/auth/tcm/callback",
     googleOnly: true,
@@ -190,10 +190,10 @@ export const { POST } = route;
 Typical server-backed setup:
 
 ```env
-NEXT_PUBLIC_TCM_OAUTH_WEB_URL=https://www.thecrimsonmarket.com
-TCM_OAUTH_API_URL=https://api.thecrimsonmarket.com
-TCM_OAUTH_CLIENT_ID=tcm_xxx
+NEXT_PUBLIC_TCM_CLIENT_ID=tcm_xxx
 TCM_OAUTH_CLIENT_SECRET=your-secret
+TCM_OAUTH_API_URL=https://thecrimsonmarket.com/mana
+NEXT_PUBLIC_TCM_OAUTH_WEB_URL=https://www.thecrimsonmarket.com
 ```
 
 Your app also needs:
@@ -207,7 +207,7 @@ Your app also needs:
 - Recommended route-backed callback path: `/auth/tcm/callback`
 - Popup compatibility callback path: `/auth/tcm/popup-callback`
 - Default route exchange endpoint: `/api/auth/tcm/oauth-exchange`
-- Default browser scope: `profile email`
+- Browser scope: omitted by default; the SDK resolves the client's single allowed scope or requires an explicit `scope` when multiple scopes are allowed
 - Default popup size: `500 x 650`
 - Default diagnostics mode: `auto`
 

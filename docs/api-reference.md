@@ -42,7 +42,7 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
 - Redirect URI matching is exact on the server side.
 - Default recommended callback path is `/auth/tcm/callback`.
 - Popup-only compatibility APIs still default to `/auth/tcm/popup-callback`.
-- Default browser scope is `profile email`.
+- Browser scope is resolved from client policy when `scope` is omitted; pass `scope` when requesting a specific allowed scope set.
 - Route-backed browser exchange defaults to `/api/auth/tcm/oauth-exchange`.
 - Recommended interaction mode is `auto`.
 
@@ -96,7 +96,7 @@ function useTcmOAuthPopup<TExchangeResult = unknown>(
   - `callbackPath?: string`
     - default: `/auth/tcm/popup-callback`
   - `scope?: string`
-    - default: `profile email`
+    - when omitted, resolves the single allowed client scope; explicit value required if multiple scope sets are allowed
   - `googleOnly?: boolean`
   - `exchangeCode(payload)`
     - required app-defined code exchange function
@@ -135,7 +135,7 @@ function useTcmOAuthPopupRoute<TExchangeResult = unknown>(
   - `callbackPath?: string`
     - default: `/auth/tcm/popup-callback`
   - `scope?: string`
-    - default: `profile email`
+    - when omitted, resolves the single allowed client scope; explicit value required if multiple scope sets are allowed
   - `googleOnly?: boolean`
   - `popup?: { width?: number; height?: number }`
     - default size: `500 x 650`
@@ -925,8 +925,8 @@ function createTcmOAuthExchangeRoute<TSession = unknown, TBody = unknown>(
   - recommended neutral path: `/auth/tcm/callback`
 - Popup-only compatibility callback path:
   - `/auth/tcm/popup-callback`
-- Default browser scope:
-  - `profile email`
+- Browser scope:
+  - omitted by default; resolves the single allowed client scope, or requires an explicit `scope` when multiple scope sets are allowed
 - Default route-backed exchange endpoint:
   - `/api/auth/tcm/oauth-exchange`
 - Default popup size:
