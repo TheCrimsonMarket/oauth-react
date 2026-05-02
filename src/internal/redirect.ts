@@ -1,7 +1,7 @@
 import { createError, normalizeProviderError } from './errors';
 import { createPkcePair, createState } from './pkce';
 import { buildAuthorizeUrl } from './url';
-import type { TcmAuthCodePayload, PopupResult, TcmOAuthError, TcmProvider } from '../types';
+import type { TcmAuthCodePayload, PopupResult, TcmOAuthError, TcmOAuthPrompt, TcmProvider } from '../types';
 
 const REDIRECT_TXN_STORAGE_KEY = 'tcm_oauth_redirect_txn_v1';
 const REDIRECT_RESULT_STORAGE_KEY = 'tcm_oauth_redirect_result_v1';
@@ -91,6 +91,7 @@ export async function startRedirectLogin(options: {
   scope: string;
   provider?: TcmProvider;
   googleOnly?: boolean;
+  prompt?: TcmOAuthPrompt;
   returnTo?: string;
 }): Promise<never> {
   if (!window.crypto?.subtle || !window.sessionStorage || typeof window.location?.assign !== 'function') {
@@ -126,6 +127,7 @@ export async function startRedirectLogin(options: {
     codeChallenge,
     provider: options.provider,
     googleOnly: options.googleOnly,
+    prompt: options.prompt,
     interactionMode: 'redirect',
   });
 

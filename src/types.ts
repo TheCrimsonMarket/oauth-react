@@ -16,6 +16,7 @@ export type TcmOAuthPhase =
 
 export type TcmOAuthInteractionMode = 'auto' | 'popup' | 'redirect';
 export type TcmResolvedOAuthInteractionMode = 'popup' | 'redirect';
+export type TcmOAuthPrompt = 'select_provider' | 'login' | 'consent' | 'none';
 
 export type TcmOAuthErrorCode =
   | 'popup_blocked'

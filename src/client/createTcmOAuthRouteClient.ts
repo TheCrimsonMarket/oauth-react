@@ -34,6 +34,10 @@ function resolveRequestedProvider(
   return requestedProvider;
 }
 
+function resolvePrompt(effectiveProvider: TcmProvider | undefined): 'login' | 'select_provider' {
+  return effectiveProvider ? 'login' : 'select_provider';
+}
+
 export function createTcmOAuthRouteClient<TExchangeResult = unknown>(
   options: CreateTcmOAuthRouteClientOptions<TExchangeResult>,
 ): TcmOAuthRouteClient<TExchangeResult> {
@@ -100,6 +104,7 @@ export function createTcmOAuthRouteClient<TExchangeResult = unknown>(
               callbackPath: options.callbackPath ?? DEFAULT_CALLBACK_PATH,
               scope: effectiveScope,
               provider: effectiveProvider,
+              prompt: resolvePrompt(effectiveProvider),
               returnTo: options.returnTo,
             });
           }
@@ -129,6 +134,7 @@ export function createTcmOAuthRouteClient<TExchangeResult = unknown>(
         scope: effectiveScope,
         provider: effectiveProvider,
         googleOnly: options.googleOnly,
+        prompt: resolvePrompt(effectiveProvider),
         returnTo: options.returnTo,
       });
     },

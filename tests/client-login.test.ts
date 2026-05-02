@@ -328,6 +328,7 @@ describe('createTcmOAuthClient', () => {
     expect(buildAuthorizeUrl).toHaveBeenCalledWith(expect.objectContaining({
       provider: undefined,
       googleOnly: undefined,
+      prompt: 'select_provider',
     }));
 
     if (!onPopupResult) {

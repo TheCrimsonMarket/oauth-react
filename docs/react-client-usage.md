@@ -35,6 +35,8 @@ export function LoginActions() {
 }
 ```
 
+`startLogin()` opens the TCM provider chooser with `prompt=select_provider`. `startLogin("discord")` or another provider value forces that provider with `provider=<provider>&prompt=login`.
+
 If the app should always start Google immediately, set `googleOnly: true` and call `startLogin()` without a provider argument.
 
 ## Scopes

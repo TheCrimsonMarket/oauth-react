@@ -38,7 +38,7 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
 
 - The SDK’s primary supported path is a server-backed app.
 - `Portal.Service` currently requires `client_secret` for token exchange.
-- Popup authorize URLs are intentionally minimal and do not carry UI-only params.
+- Popup authorize URLs carry explicit OAuth interaction intent through `prompt` and, when selected, `provider`.
 - Redirect URI matching is exact on the server side.
 - Default recommended callback path is `/auth/tcm/callback`.
 - Popup-only compatibility APIs still default to `/auth/tcm/popup-callback`.
@@ -50,8 +50,10 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
 
 - `buildAuthorizeUrl()` always emits the OAuth protocol params and PKCE fields.
 - In popup mode it adds `ui_mode=popup`.
-- When `googleOnly` is enabled it adds `required_provider=google`.
-- It does not emit `provider`, `auto_start_provider`, or `popup_variant`.
+- `startLogin()` without a provider emits `prompt=select_provider`.
+- `startLogin(provider)` emits `provider=<provider>&prompt=login`.
+- When `googleOnly` is enabled it emits `provider=google` and the legacy compatibility alias `required_provider=google`.
+- It does not emit `auto_start_provider` or `popup_variant`.
 - In the standard TCM web popup implementation, unauthenticated Google popup login is handled by same-window redirect inside the already-open popup, not by opening a second GIS popup.
 
 ## Root Exports
@@ -66,6 +68,10 @@ Canonical reference for the public API surface of `@crimsoncorp/oauth-react`.
   - all route-backed popup options, plus:
   - `googleOnly?: boolean`
     - when `true`, `startLogin()` defaults to Google and the authorize URL enforces Google-only mode
+  - `startLogin()`
+    - opens provider chooser mode with `prompt=select_provider`
+  - `startLogin(provider)`
+    - forces that provider with `provider=<provider>&prompt=login`
   - `interactionMode?: "auto" | "popup" | "redirect"`
     - default: `auto`
   - `fallbackToRedirect?: boolean`

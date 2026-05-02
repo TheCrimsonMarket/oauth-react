@@ -1,4 +1,4 @@
-import type { TcmProvider, TcmResolvedOAuthInteractionMode } from '../types';
+import type { TcmOAuthPrompt, TcmProvider, TcmResolvedOAuthInteractionMode } from '../types';
 
 interface BuildAuthorizeUrlOptions {
   tcmWebUrl: string;
@@ -9,6 +9,7 @@ interface BuildAuthorizeUrlOptions {
   codeChallenge: string;
   provider?: TcmProvider;
   googleOnly?: boolean;
+  prompt?: TcmOAuthPrompt;
   interactionMode?: TcmResolvedOAuthInteractionMode;
 }
 
@@ -25,7 +26,16 @@ export function buildAuthorizeUrl(options: BuildAuthorizeUrlOptions): string {
     url.searchParams.set('ui_mode', 'popup');
   }
 
+  if (options.prompt) {
+    url.searchParams.set('prompt', options.prompt);
+  }
+
+  if (options.provider) {
+    url.searchParams.set('provider', options.provider);
+  }
+
   if (options.googleOnly) {
+    url.searchParams.set('provider', 'google');
     url.searchParams.set('required_provider', 'google');
   }
 

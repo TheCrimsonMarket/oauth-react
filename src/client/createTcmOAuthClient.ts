@@ -78,6 +78,10 @@ function resolveRequestedProvider(requestedProvider: TcmProvider | undefined, go
   return requestedProvider;
 }
 
+function resolvePrompt(effectiveProvider: TcmProvider | undefined): 'login' | 'select_provider' {
+  return effectiveProvider ? 'login' : 'select_provider';
+}
+
 export function resetTcmOAuthBrowserStateInternal(): void {
   if (typeof window === 'undefined') {
     return;
@@ -262,6 +266,7 @@ export function createTcmOAuthClient(options: CreateTcmOAuthClientOptions): TcmO
             codeChallenge,
             provider: effectiveProvider,
             googleOnly: options.googleOnly,
+            prompt: resolvePrompt(effectiveProvider),
             interactionMode: 'popup',
           });
 

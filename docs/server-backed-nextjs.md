@@ -178,12 +178,13 @@ This keeps the app integration simple while making mobile web and privacy-restri
 
 ## Popup Contract
 
-For Google-only popup flows, the SDK now standardizes the authorize URL down to:
+For popup flows, the SDK standardizes the authorize URL down to:
 - OAuth protocol params
 - `ui_mode=popup`
-- `required_provider=google`
+- `prompt=select_provider` for chooser mode, or `provider=<provider>&prompt=login` for explicit provider buttons
+- `required_provider=google` only as the legacy compatibility alias for Google-only flows
 
-UI-specific popup params such as `provider`, `auto_start_provider`, and `popup_variant` are no longer part of the standard SDK contract. `service.core-ui` is expected to:
+UI-specific popup params such as `auto_start_provider` and `popup_variant` are not part of the standard SDK contract. `service.core-ui` is expected to:
 - show its own minimal spinner shell for popup login
 - silently preflight `/oauth/authorize`
 - redirect the popup window itself to Google when the backend returns `401` or `provider_link_required`
