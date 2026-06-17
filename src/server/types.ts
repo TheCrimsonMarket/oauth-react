@@ -56,6 +56,15 @@ export interface ExchangeTcmPopupCodeOptions extends ExchangeTcmAuthorizationCod
   googleOnly?: boolean;
 }
 
+export interface RefreshTcmAccessTokenOptions extends TcmOAuthServerOptions {
+  traceId?: string;
+}
+
+export interface RevokeTcmTokenOptions extends TcmOAuthServerOptions {
+  tokenTypeHint?: 'access_token' | 'refresh_token';
+  traceId?: string;
+}
+
 export interface TcmOAuthExchangeResult {
   tokenSet: TcmOAuthTokenSet;
   userInfo: TcmOAuthUserInfo;

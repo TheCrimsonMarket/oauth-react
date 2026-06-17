@@ -5,6 +5,8 @@ import type {
   ExchangeTcmAuthorizationCodeOptions,
   ExchangeTcmAuthorizationCodeResult,
   ExchangeTcmPopupCodeOptions,
+  RefreshTcmAccessTokenOptions,
+  RevokeTcmTokenOptions,
   TcmOAuthExchangeResult,
   TcmOAuthServerOptions,
   TcmOAuthTokenSet,
@@ -175,6 +177,96 @@ export async function exchangeTcmAuthorizationCode(
   }
 
   throw new TcmOAuthServerError('TCM token exchange failed', 502, { traceId });
+}
+
+export async function refreshTcmAccessToken(
+  refreshToken: string,
+  options: RefreshTcmAccessTokenOptions,
+): Promise<TcmOAuthTokenSet> {
+  const refreshTokenValue = getRequiredString(refreshToken, 'refresh_token');
+  const apiBaseUrl = getRequiredString(options.apiBaseUrl, 'apiBaseUrl').replace(/\/$/, '');
+  const clientId = getRequiredString(options.clientId, 'clientId');
+  const clientSecret = getRequiredString(options.clientSecret, 'clientSecret');
+  const fetchImpl = getFetchImpl(options);
+  const traceId = options.traceId ?? createTraceId();
+
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshTokenValue,
+    client_id: clientId,
+    client_secret: clientSecret,
+  });
+
+  const response = await fetchImpl(`${apiBaseUrl}/oauth/token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+    },
+    body: body.toString(),
+    cache: 'no-store',
+  });
+
+  const responseBody = await parseJsonSafe(response);
+  if (!response.ok) {
+    const message =
+      (typeof responseBody?.error_description === 'string' && responseBody.error_description) ||
+      (typeof responseBody?.error === 'string' && responseBody.error) ||
+      'TCM token refresh failed';
+
+    throw new TcmOAuthServerError(message, response.status || 502, {
+      code: typeof responseBody?.error === 'string' ? responseBody.error : undefined,
+      traceId,
+      details: responseBody,
+    });
+  }
+
+  return toTokenSet(responseBody || {});
+}
+
+export async function revokeTcmToken(
+  token: string,
+  options: RevokeTcmTokenOptions,
+): Promise<void> {
+  const tokenValue = getRequiredString(token, 'token');
+  const apiBaseUrl = getRequiredString(options.apiBaseUrl, 'apiBaseUrl').replace(/\/$/, '');
+  const clientId = getRequiredString(options.clientId, 'clientId');
+  const clientSecret = getRequiredString(options.clientSecret, 'clientSecret');
+  const fetchImpl = getFetchImpl(options);
+  const traceId = options.traceId ?? createTraceId();
+
+  const body = new URLSearchParams({
+    token: tokenValue,
+    client_id: clientId,
+    client_secret: clientSecret,
+  });
+  if (options.tokenTypeHint) {
+    body.set('token_type_hint', options.tokenTypeHint);
+  }
+
+  const response = await fetchImpl(`${apiBaseUrl}/oauth/revoke`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+    },
+    body: body.toString(),
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    const responseBody = await parseJsonSafe(response);
+    const message =
+      (typeof responseBody?.error_description === 'string' && responseBody.error_description) ||
+      (typeof responseBody?.error === 'string' && responseBody.error) ||
+      'TCM token revocation failed';
+
+    throw new TcmOAuthServerError(message, response.status || 502, {
+      code: typeof responseBody?.error === 'string' ? responseBody.error : undefined,
+      traceId,
+      details: responseBody,
+    });
+  }
 }
 
 export async function fetchTcmUserInfo(
